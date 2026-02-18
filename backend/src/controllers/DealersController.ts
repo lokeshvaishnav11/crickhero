@@ -456,7 +456,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
           //   json: () => res, // dummy implementation for json
           // }
 
-       await axios.post("https://api.11wickets.pro/api/user-account-balance", { userId: newUser._id,
+       await axios.post("https://api.crickhero.com/api/user-account-balance", { userId: newUser._id,
             parentUserId: parentUser._id,
             amount: sendamount,
             narration: 'Initial deposit on signup',
