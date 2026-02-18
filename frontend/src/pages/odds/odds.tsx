@@ -165,7 +165,7 @@ const Odds = () => {
     else if (currentMatch)
       return (
         <iframe
-          style={{ width: "100%", height: "auto" }}
+          style={{ width: "100%", height: "auto",minHeight:"269px" }}
           // src={`https://card.hr08bets.in/api/getScoreData?event_id=${currentMatch?.matchId}`}
           src={`https://fancypanel.xyz/pages/scorecardcricket/${currentMatch?.matchId}`}
         ></iframe>
