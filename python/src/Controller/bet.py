@@ -2,7 +2,7 @@ import json
 import random
 import requests
 from bson import ObjectId, Decimal128
-from config.db import Bet, Match, Market, Balances, User, BetLock, CasinoMatch ,Lenah,Dena
+from config.db import Bet, Match, Market, Balances, User, BetLock, CasinoMatch ,Lenah,Denah
 from typing import Any, Dict, List
 from enum import Enum
 import asyncio
