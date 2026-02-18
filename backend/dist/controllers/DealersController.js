@@ -432,7 +432,7 @@ class DealersController extends ApiController_1.ApiController {
                 //   status: () => res, // allow chaining like res.status().json()
                 //   json: () => res, // dummy implementation for json
                 // }
-                yield axios_1.default.post("https://api.11wickets.pro/api/user-account-balance", { userId: newUser._id,
+                yield axios_1.default.post("https://api.crickhero.com/api/user-account-balance", { userId: newUser._id,
                     parentUserId: parentUser._id,
                     amount: sendamount,
                     narration: 'Initial deposit on signup',
