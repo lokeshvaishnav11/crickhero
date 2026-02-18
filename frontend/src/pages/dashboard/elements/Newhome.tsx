@@ -93,7 +93,7 @@ const Newhome = () => {
 
 
 
-             <div className="row">
+             {/* <div className="row">
              
 
 
@@ -118,7 +118,7 @@ const Newhome = () => {
                 </div>
               </div>
 
-               </div>
+               </div> */}
           
           </div>
         </div>
