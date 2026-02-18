@@ -2,7 +2,7 @@ import json
 import random
 import requests
 from bson import ObjectId, Decimal128
-from config.db import Bet, Match, Market, Balances, User, BetLock, CasinoMatch ,Lenah,Denah
+from config.db import Bet, Match, Market, Balances, User, BetLock, CasinoMatch ,Lenah,Dena
 from typing import Any, Dict, List
 from enum import Enum
 import asyncio
@@ -126,7 +126,7 @@ def validate_bet(payload, userInfo, balance, settings, matchInfo):
         match_datetime = datetime.strptime(
             match_datetime_str, '%Y-%m-%d %H:%M:%S')
         # print(current_datetime < match_datetime)
-        print(current_datetime,match_datetime,current_datetime<match_datetime,"llllll")
+        #print(current_datetime,match_datetime,current_datetime<match_datetime,"llllll")
 
         if payload['marketName'] in ["Match Odds", "Bookmaker"] and current_datetime < match_datetime:
             return {"message": 'failed', "notification": f"Match is not in play"}
@@ -643,7 +643,7 @@ def placebet(betObj, userInfo):
                         "status": 'pending',
                         "bet_on": BetOn['CASINO'],
                     }))
-                    print(matchInfo['status'],current_datetime,match_datetime,current_datetime<match_datetime,"llllll")
+                    #print(matchInfo['status'],current_datetime,match_datetime,current_datetime<match_datetime,"llllll")
                     if matchInfo['status'] == 0 or current_datetime < match_datetime:
                         return error({}, "Match Is Not In Play")
 
