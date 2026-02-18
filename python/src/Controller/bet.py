@@ -644,7 +644,7 @@ def placebet(betObj, userInfo):
                         "bet_on": BetOn['CASINO'],
                     }))
                     #print(matchInfo['status'],current_datetime,match_datetime,current_datetime<match_datetime,"llllll")
-                    if matchInfo['status'] == 0 or current_datetime < match_datetime:
+                    if matchInfo['status'] == 0 :
                         return error({}, "Match Is Not In Play")
 
                     markets = matchInfo
