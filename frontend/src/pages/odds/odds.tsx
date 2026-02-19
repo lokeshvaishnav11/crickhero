@@ -154,7 +154,7 @@ const Odds = () => {
     fetchT10Stream();
   }, [marketDataList]);
 
-    const [isFullScore, setIsFullScore] = React.useState(false);
+  const [isFullScore, setIsFullScore] = React.useState(false);
 
   const toggleFullScore = () => {
     setIsFullScore(prev => !prev);
@@ -162,39 +162,39 @@ const Odds = () => {
 
   const scoreBoard = () => {
     if (currentMatch) {
-    return (
-      <div style={{ position: "relative", width: "100%" }}>
-        {/* Full Score Icon */}
-        <div
-          onClick={toggleFullScore}
-          style={{
-            position: "absolute",
-            top: "15px",
-            right: "8px",
-            zIndex: 10,
-            cursor: "pointer",
-            background: "#000",
-            color: "#fff",
-            padding: "6px 10px",
-            borderRadius: "4px",
-            fontSize: "12px"
-          }}
-        >
-          {isFullScore ? "Minimize" : "Full Score"}
-        </div>
+      return (
+        <div style={{ position: "relative", width: "100%" }}>
+          {/* Full Score Icon */}
+          <div
+            onClick={toggleFullScore}
+            style={{
+              position: "absolute",
+              top: "15px",
+              right: "8px",
+              zIndex: 10,
+              cursor: "pointer",
+              background: "#000",
+              color: "#fff",
+              padding: "6px 10px",
+              borderRadius: "4px",
+              fontSize: "12px"
+            }}
+          >
+            {isFullScore ? "Minimize" : "Full Score"}
+          </div>
 
-        <iframe
-          style={{
-            width: "100%",
-            height: "auto",
-            minHeight: isFullScore ? "550px" : "269px",
-            transition: "min-height 0.3s ease"
-          }}
-          src={`https://fancypanel.xyz/pages/scorecardcricket/${currentMatch?.matchId}`}
-        />
-      </div>
-    );
-  }
+          <iframe
+            style={{
+              width: "100%",
+              height: "auto",
+              minHeight: isFullScore ? "550px" : "269px",
+              transition: "min-height 0.3s ease"
+            }}
+            src={`https://fancypanel.xyz/pages/scorecardcricket/${currentMatch?.matchId}`}
+          />
+        </div>
+      );
+    }
   };
 
   const t10Tv = (height: string) => {
@@ -406,7 +406,7 @@ const Odds = () => {
         currentMatch={currentMatch}
         fancies={
           moment().isSame(moment(currentMatch?.matchDateTime), "day") &&
-          moment().isAfter(moment(currentMatch?.matchDateTime))
+            moment().isAfter(moment(currentMatch?.matchDateTime))
             ? fancies
             : []
         }
@@ -429,7 +429,7 @@ const Odds = () => {
         currentMatch={currentMatch}
         fancies={
           moment().isSame(moment(currentMatch?.matchDateTime), "day") &&
-          moment().isAfter(moment(currentMatch?.matchDateTime))
+            moment().isAfter(moment(currentMatch?.matchDateTime))
             ? fancies
             : []
         }
