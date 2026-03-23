@@ -57,84 +57,84 @@ export class DealersController extends ApiController {
 //   }
 
 
-async editComm(req: Request, res: Response): Promise<Response> {
-  const session = await Database.getInstance().startSession();
-  console.log(req.body, "req.body");
+  async editComm(req: Request, res: Response): Promise<Response> {
+    const session = await Database.getInstance().startSession();
+    console.log(req.body, "req.body");
 
-  try {
-    session.startTransaction();
-    const { _id, username, code,partnership, share , mcom , scom , matcom  } = req.body; // Make sure you're sending 'ownPartnership' from frontend
+    try {
+      session.startTransaction();
+      const { _id, username, code, partnership, share, mcom, scom, matcom } = req.body; // Make sure you're sending 'ownPartnership' from frontend
 
-    // console.log(req.body, "req.body")
-    const userToUpdate: any = await User.findById(_id).session(session);
+      // console.log(req.body, "req.body")
+      const userToUpdate: any = await User.findById(_id).session(session);
 
-    // console.log(userToUpdate,"usertoupdate")
-    if (!userToUpdate) {
-      await session.abortTransaction();
-      session.endSession();
-      return this.fail(res, "User not found");
-    }
+      // console.log(userToUpdate,"usertoupdate")
+      if (!userToUpdate) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(res, "User not found");
+      }
 
-     // 🔥 FETCH PARENT
-     const parent: any = await User.findById(userToUpdate.parentId).session(session);
-     if (!parent) {
-       await session.abortTransaction();
-       session.endSession();
-       return this.fail(res, "Parent user not found");
-     }
+      // 🔥 FETCH PARENT
+      const parent: any = await User.findById(userToUpdate.parentId).session(session);
+      if (!parent) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(res, "Parent user not found");
+      }
 
-     // 🔴 MAIN COMMISSION CHECKS (PARENT BASED)
-    if (mcom > parent.mcom) {
-      await session.abortTransaction();
-      session.endSession();
-      return this.fail(
-        res,
-        `Match Commission cannot exceed parent limit (${parent.mcom}%)`
-      );
-    }
+      // 🔴 MAIN COMMISSION CHECKS (PARENT BASED)
+      if (mcom > parent.mcom) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(
+          res,
+          `Match Commission cannot exceed parent limit (${parent.mcom}%)`
+        );
+      }
 
-    if (scom > parent.scom) {
-      await session.abortTransaction();
-      session.endSession();
-      return this.fail(
-        res,
-        `Session Commission cannot exceed parent limit (${parent.scom}%)`
-      );
-    }
+      if (scom > parent.scom) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(
+          res,
+          `Session Commission cannot exceed parent limit (${parent.scom}%)`
+        );
+      }
 
-    if (matcom > parent.matcom) {
-      await session.abortTransaction();
-      session.endSession();
-      return this.fail(
-        res,
-        `Matka Commission cannot exceed parent limit (${parent.matcom}%)`
-      );
-    }
+      if (matcom > parent.matcom) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(
+          res,
+          `Matka Commission cannot exceed parent limit (${parent.matcom}%)`
+        );
+      }
 
-     if (share > parent.share) {
-      await session.abortTransaction();
-      session.endSession();
-      return this.fail(
-        res,
-        `Super share cannot exceed parent limit (${parent.share}%)`
-      );
-    }
+      if (share > parent.share) {
+        await session.abortTransaction();
+        session.endSession();
+        return this.fail(
+          res,
+          `Super share cannot exceed parent limit (${parent.share}%)`
+        );
+      }
 
 
-    // 🔵 FETCH ALL CHILD USERS
-const children = await User.find({ parentId: _id }).session(session);
+      // 🔵 FETCH ALL CHILD USERS
+      const children = await User.find({ parentId: _id }).session(session);
 
-// 🔴 CHILD LIMIT CHECKS
-for (const child of children) {
-  if (child.share > share) {
-    await session.abortTransaction();
-    session.endSession();
-    return this.fail(
-      res,
-      `Cannot reduce share to ${share}%. Child user (${child.username}) already has ${child.share}%`
-    );
-  }
-}
+      // 🔴 CHILD LIMIT CHECKS
+      for (const child of children) {
+        if (child.share > share) {
+          await session.abortTransaction();
+          session.endSession();
+          return this.fail(
+            res,
+            `Cannot reduce share to ${share}%. Child user (${child.username}) already has ${child.share}%`
+          );
+        }
+      }
 
 
 
@@ -148,35 +148,41 @@ for (const child of children) {
       userToUpdate.code = code;
 
 
-    //      // Update ownRatio for keys '1' and '2'
-    // ['1', '2'].forEach(key => {
-    //   if (partnership[key]?.ownRatio !== undefined) {
-    //     const newRatio = String(partnership[key].ownRatio); // cast to string
+      //      // Update ownRatio for keys '1' and '2'
+      // ['1', '2'].forEach(key => {
+      //   if (partnership[key]?.ownRatio !== undefined) {
+      //     const newRatio = String(partnership[key].ownRatio); // cast to string
 
-    //     if (!userToUpdate.partnership[key]) {
-    //       userToUpdate.partnership[key] = {};
-    //     }
+      //     if (!userToUpdate.partnership[key]) {
+      //       userToUpdate.partnership[key] = {};
+      //     }
 
-    //     userToUpdate.partnership[key].ownRatio = newRatio;
+      //     userToUpdate.partnership[key].ownRatio = newRatio;
 
-    //     // Notify mongoose that nested object has changed
-    //     userToUpdate.markModified(`partnership.${key}.ownRatio`);
-    //   }
-    // });
+      //     // Notify mongoose that nested object has changed
+      //     userToUpdate.markModified(`partnership.${key}.ownRatio`);
+      //   }
+      // });
 
 
-  
-    await userToUpdate.save({ session });
 
-    await session.commitTransaction();
-    session.endSession();
-    return this.success(res, {}, "Partnership updated successfully");
-  } catch (e: any) {
-    await session.abortTransaction();
-    session.endSession();
-    return this.fail(res, "Server error: " + e.message);
+      await userToUpdate.save({ session });
+
+      await User.updateMany(
+        { parentId: _id },
+        { $set: { pshare: share } },
+        { session } // 👈 transaction me hai toh session pass karna zaroori
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+      return this.success(res, {}, "Partnership updated successfully");
+    } catch (e: any) {
+      await session.abortTransaction();
+      session.endSession();
+      return this.fail(res, "Server error: " + e.message);
+    }
   }
-}
 
 
 
