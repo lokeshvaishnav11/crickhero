@@ -164,7 +164,7 @@ def checkAllOddsConditon(payload):
             return {"message": "failed", "notification": f"{errors}"}
     elif (payload['betOn'] == BetOn['CASINO']):
         errors = checkCasinoOddsConditions(
-            payload['gtype'], payload['selectionId'], payload['isBack'], payload['odds'], payload['stack'])
+            payload['gtype'], payload['selectionId'], payload['isBack'], payload['odds'], payload['stack'],payload["marketId"])
         if (errors):
             return {"message": "failed", "notification": f"{errors}"}
     else:
@@ -408,18 +408,38 @@ def placebet(betObj, userInfo):
             selectionId = payload['selectionId']
             isBack = payload['isBack']
             oppsiteVol = payload['oppsiteVol'] if 'oppsiteVol' in payload else "undefined"
+            # Force pnl & loss calculation for CASINO and MATCH_ODDS
+            if bet_On == BetOn['CASINO'] or bet_On == BetOn['MATCH_ODDS']:
 
+                stake = float(payload['stack'])
+                odds = float(payload['odds'])
 
+                if isBack:  
+                    # Back bet
+                    profit = (odds - 1) * stake
+                    loss = -stake
+                else:
+                    # Lay bet
+                    profit = stake
+                    loss = -(odds - 1) * stake
+            else:
+                volume = float(payload['volume'])
+                if isBack:
+                    profit = (volume * stake)/100
+                    loss = -stake
+                else:
+                    profit = stake
+                    loss = -(volume * stake)/100
             if(market_name=='Match Odds'):
                 delay(4000)
             
             if match_id in [23, 15] and int(selectionId) in [11, 12, 13, 14]:
                 loss = float(payload['exposure']) * 5
-            if match_id in [9]:
-                if isBack is False: 
-                   loss = -payload['stack'] * (odds/100)
+            # if match_id in [9]:
+            #     if isBack is False: -m
+            #        loss = -payload['stack'] * (odds/100)
             print(loss)
-            print("losslosslossloss")
+            print("losslosslossloss") 
             ipAddress = payload['ipAddress']
             volume = float(payload.get("volume", 0))
             matchName = payload['matchName']
@@ -514,10 +534,11 @@ def placebet(betObj, userInfo):
                 if (exposer != 'failed'):
                     available_balance = round(balance.get("balance", 0))
                     casinoexposer = balance.get("casinoexposer", 0)
+                    matkaexposer = balance.get("matkaexposer", 0)
                     comm = balance.get("commision",0)
                     print(available_balance)
                     print((float(exposer) + float(casinoexposer)))
-                    if ((available_balance - (float(exposer) + float(casinoexposer))) < 0):
+                    if ((available_balance - (float(exposer) + float(casinoexposer)+float(matkaexposer))) < 0):
                         data_to_serialize_ = {"message": "Max limit Exceed"}
                         json_data = json.dumps(
                         data_to_serialize_, cls=JSONEncoderWithObjectId)
@@ -596,9 +617,10 @@ def placebet(betObj, userInfo):
                 #print("casinoexposer")
                 if casinoexposer != 'failed':
                     exposer = balance.get("exposer", 0)
+                    matkaexposer = balance.get("matkaexposer", 0)
                     available_balance = balance.get("balance", 0)
                     comm = balance.get("commision",0)
-                    if (available_balance - (float(exposer) + float(casinoexposer))  < 0):
+                    if (available_balance - (float(exposer) + float(casinoexposer) +float(matkaexposer))  < 0):
                         return json.dumps(error({}, "Max limit Exceed 2"), cls=JSONEncoderWithObjectId)
                     betInsert = Bet.insert_one(jsonObj)
                     inserted_id = betInsert.inserted_id
@@ -807,7 +829,7 @@ def checkKey(dict, key):
         return False
 
 
-def checkCasinoOddsConditions(game_code, selection_id, is_back, odds_check, stack):
+def checkCasinoOddsConditions(game_code, selection_id, is_back, odds_check, stack,marketId):
     currentodds = getcurrentCasinoodds(game_code, selection_id)
     #print(currentodds)
     if not currentodds or ('data' not in currentodds):
@@ -840,6 +862,8 @@ def checkCasinoOddsConditions(game_code, selection_id, is_back, odds_check, stac
                 return f"{odds} is not valid."
             if float(str(minStake))>float(str(stack)) or float(str(maxStake))<float(str(stack)):
                 return f"Check Maximum or Minimum Bet Limit"
+            if str(marketId) != str(finalOdds['marketId']):
+                return f"round id is not valid"  
         else:
             return "Market is Suspended hello world "
 
@@ -1638,3 +1662,6 @@ def bet_list(user, match_id):
          return error({}, str(e))
   
 # def lena_dena()
+
+
+
