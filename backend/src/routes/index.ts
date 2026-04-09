@@ -53,7 +53,7 @@ router.get(
 )
 
 router.get(
-  '/result-fancy-new',
+  '/api/result-fancy-new',
 
   new FancyController().declarefancyresultnew,
 )
