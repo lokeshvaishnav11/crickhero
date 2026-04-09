@@ -636,6 +636,39 @@ class FancyController extends ApiController_1.ApiController {
                 return this.fail(res, e);
             }
         });
+        this.activeFanciesnew = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { matchId, gtype } = req.query;
+                if (!matchId)
+                    return this.fail(res, "matchId is required field");
+                // Get all selectionIds of fancy bets for this match
+                const bets = yield Bet_1.Bet.find({ matchId, bet_on: Bet_1.BetOn.FANCY }).select({ selectionId: 1 });
+                const allBets = {};
+                bets.forEach(bet => {
+                    allBets[`${bet.selectionId}`] = true;
+                });
+                let fancy;
+                if (gtype === "session") {
+                    // In case of "session", fetch all types of fancies for the match
+                    fancy = yield Fancy_1.Fancy.find({ matchId }).sort({ active: -1 }).lean();
+                }
+                else {
+                    // For other gtypes, filter strictly by gtype
+                    fancy = yield Fancy_1.Fancy.find({ matchId, gtype }).sort({ active: -1 }).lean();
+                }
+                // Mark fancies where user has bets
+                fancy = fancy
+                    .map((f) => {
+                    f.bet = !!allBets[f.marketId];
+                    return f;
+                })
+                    .sort((a, b) => Number(b.bet) - Number(a.bet));
+                return this.success(res, fancy);
+            }
+            catch (e) {
+                return this.fail(res, e);
+            }
+        });
         this.suspendFancy = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { marketId, matchId, type } = req.query;
@@ -1147,6 +1180,137 @@ class FancyController extends ApiController_1.ApiController {
             }
         });
         this.declarefancyresult = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { marketId, matchId, result } = req.query;
+                const userbet = yield Bet_1.Bet.aggregate([
+                    {
+                        $match: {
+                            status: "pending",
+                            bet_on: Bet_1.BetOn.FANCY,
+                            marketId: marketId,
+                            matchId: parseInt(matchId),
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: "$userId",
+                            allBets: { $push: "$$ROOT" },
+                        },
+                    },
+                ]);
+                let userIdList = [];
+                const parentIdList = [];
+                const declare_result = userbet.map((Item) => __awaiter(this, void 0, void 0, function* () {
+                    let allbets = Item.allBets;
+                    const settle_single = allbets.map((ItemBetList, indexBetList) => __awaiter(this, void 0, void 0, function* () {
+                        let profit_type = "loss";
+                        profit_type =
+                            ItemBetList.isBack == false &&
+                                parseInt(result) < parseInt(ItemBetList.odds)
+                                ? "profit"
+                                : profit_type;
+                        profit_type =
+                            ItemBetList.isBack == true &&
+                                parseInt(result) >= parseInt(ItemBetList.odds)
+                                ? "profit"
+                                : profit_type;
+                        let profitLossAmt = 0;
+                        if (ItemBetList.gtype === "fancy1") {
+                            profit_type =
+                                ItemBetList.isBack == true && parseInt(result) == 1
+                                    ? "profit"
+                                    : profit_type;
+                            profit_type =
+                                ItemBetList.isBack == false && parseInt(result) == 0
+                                    ? "profit"
+                                    : profit_type;
+                        }
+                        if (profit_type == "profit") {
+                            if (ItemBetList.gtype === "fancy1") {
+                                profitLossAmt = ItemBetList.isBack
+                                    ? ItemBetList.odds * ItemBetList.stack - ItemBetList.stack
+                                    : ItemBetList.stack;
+                            }
+                            else {
+                                profitLossAmt = ItemBetList.isBack
+                                    ? (parseFloat(ItemBetList.volume) *
+                                        parseFloat(ItemBetList.stack)) /
+                                        100
+                                    : ItemBetList.stack;
+                            }
+                        }
+                        else if (profit_type == "loss") {
+                            if (ItemBetList.gtype === "fancy1") {
+                                profitLossAmt = ItemBetList.isBack
+                                    ? -ItemBetList.stack
+                                    : -1 *
+                                        (ItemBetList.odds * ItemBetList.stack - ItemBetList.stack);
+                            }
+                            else {
+                                profitLossAmt = ItemBetList.isBack
+                                    ? -ItemBetList.stack
+                                    : -(parseFloat(ItemBetList.volume) *
+                                        parseFloat(ItemBetList.stack)) / 100;
+                            }
+                        }
+                        let type_string = ItemBetList.isBack ? "Yes" : "No";
+                        if (result == -1) {
+                            profitLossAmt = 0;
+                        }
+                        let narration = ItemBetList.matchName +
+                            " / " +
+                            ItemBetList.selectionName +
+                            " / " +
+                            type_string +
+                            " / " +
+                            (result == -1 ? "Abandoned" : result);
+                        yield this.addprofitlosstouser({
+                            userId: ObjectId(Item._id),
+                            bet_id: ObjectId(ItemBetList._id),
+                            profit_loss: profitLossAmt,
+                            matchId,
+                            narration,
+                            sportsType: ItemBetList.sportId,
+                            selectionId: ItemBetList.selectionId,
+                            sportId: ItemBetList.sportId,
+                        });
+                        if (result != -1) {
+                            yield this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, Bet_1.BetOn.FANCY);
+                        }
+                        if (indexBetList == 0) {
+                            ItemBetList.ratioStr.allRatio.map((ItemParentStr) => {
+                                parentIdList.push(ItemParentStr.parent);
+                                userIdList.push(ObjectId(ItemParentStr.parent));
+                            });
+                        }
+                        user_socket_1.default.betDelete({
+                            betId: ItemBetList._id,
+                            userId: ItemBetList.userId,
+                        });
+                    }));
+                    yield Promise.all(settle_single);
+                    userIdList.push(ObjectId(Item._id));
+                }));
+                yield Promise.all(declare_result);
+                yield Bet_1.Bet.updateMany({
+                    userId: { $in: userIdList },
+                    matchId: matchId,
+                    selectionId: marketId,
+                    bet_on: Bet_1.BetOn.FANCY,
+                    status: "pending",
+                }, { $set: { status: "completed" } });
+                const unique = [...new Set(userIdList)];
+                if (unique.length > 0) {
+                    yield this.updateUserAccountStatement(unique, parentIdList);
+                }
+                yield Fancy_1.Fancy.updateOne({ matchId: matchId, marketId: marketId }, { $set: { result: result } });
+                return this.success(res, userbet, "");
+            }
+            catch (e) {
+                return this.fail(res, e);
+            }
+        });
+        this.declarefancyresultnew = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { marketId, matchId, result } = req.query;
                 const userbet = yield Bet_1.Bet.aggregate([

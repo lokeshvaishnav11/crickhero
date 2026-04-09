@@ -225,6 +225,8 @@ class DealersController extends ApiController_1.ApiController {
                 //   }
                 // });
                 yield userToUpdate.save({ session });
+                yield User_1.User.updateMany({ parentId: _id }, { $set: { pshare: share } }, { session } // 👈 transaction me hai toh session pass karna zaroori
+                );
                 yield session.commitTransaction();
                 session.endSession();
                 return this.success(res, {}, "Partnership updated successfully");

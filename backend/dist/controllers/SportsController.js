@@ -697,8 +697,7 @@ class SportsController extends ApiController_1.ApiController {
             let bookmakerSaved = false;
             for (const market of markets.data.sports) {
                 // ✅ ONLY BOOKMAKER
-                if (market.marketName !== "Bookmaker")
-                    continue;
+                // if (market.marketName !== "Bookmaker") continue;
                 // ✅ already one bookmaker saved → ignore others
                 if (bookmakerSaved)
                     break;

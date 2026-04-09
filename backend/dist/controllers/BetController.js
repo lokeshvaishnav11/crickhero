@@ -1539,6 +1539,7 @@ class BetController extends ApiController_1.ApiController {
             }
             try {
                 const user = req.user;
+                const mid = req.query.mid ? Number(req.query.mid) : null;
                 // 🔹 Get child users of this user
                 const usersWithThisAsParent = yield User_1.User.find({
                     parentStr: ObjectId(user._id),
@@ -1596,11 +1597,7 @@ class BetController extends ApiController_1.ApiController {
                 const [bets, matches, childData] = yield Promise.all([
                     Bet_1.Bet.aggregate([
                         {
-                            $match: {
-                                userId: { $in: userIds },
-                                bet_on: { $ne: "CASINO" },
-                                status: { $ne: "deleted" },
-                            },
+                            $match: Object.assign({ userId: { $in: userIds }, bet_on: { $ne: "CASINO" }, status: { $ne: "deleted" } }, (mid ? { matchId: mid } : {})),
                         },
                         { $sort: { createdAt: -1 } },
                         // ===== PARENT LOOKUP =====
@@ -1665,7 +1662,7 @@ class BetController extends ApiController_1.ApiController {
                             }
                         }
                     ]),
-                    Match_1.Match.find({}).lean(),
+                    Match_1.Match.find(mid ? { matchId: mid } : {}).lean(),
                     User_1.User.find({ parentId: user._id }).lean(),
                 ]);
                 console.log("✅ Bets are plain objects now");

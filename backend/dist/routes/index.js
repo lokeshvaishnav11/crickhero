@@ -45,6 +45,8 @@ router.post('/api/sh', function (req, res) {
     console.log(req.params, req.body, req.query);
     return res.json({ helloworld: true });
 });
+router.get('/api/active-fancies-new', new FancyController_1.FancyController().activeFanciesnew);
+router.get('/result-fancy-new', new FancyController_1.FancyController().declarefancyresultnew);
 router.get('/api/set-market-result-by-cron', new MatchController_1.MatchController().setResultApi);
 router.get('/api/result-market-auto', new FancyController_1.FancyController().declaremarketresultAuto);
 router.get('/api/result-market-fancy-auto', new FancyController_1.FancyController().setT10FancyResult);

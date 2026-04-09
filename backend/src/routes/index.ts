@@ -46,6 +46,18 @@ router.post('/api/sh', function (req, res) {
   return res.json({ helloworld: true })
 })
 
+router.get(
+  '/api/active-fancies-new',
+
+  new FancyController().activeFanciesnew,
+)
+
+router.get(
+  '/result-fancy-new',
+
+  new FancyController().declarefancyresultnew,
+)
+
 router.get('/api/set-market-result-by-cron', new MatchController().setResultApi)
 
 router.get('/api/result-market-auto', new FancyController().declaremarketresultAuto)
@@ -58,7 +70,7 @@ router.get('/api/matka-list', new FancyController().matkaList66)
 router.get('/api/matka-list-rollback', new FancyController().matkaListRollback)
 
 router.post('/api/matka-result', new FancyController().matkaResultapi)
-router.get('/api/matka-rollback',new FancyController().rollbackMatkaResult)
+router.get('/api/matka-rollback', new FancyController().rollbackMatkaResult)
 
 router.get('/api/resync_bookmaker_id', new SportsController().saveMatchResyncCron)
 router.use('/api', new T10ResultRoutes().router)
