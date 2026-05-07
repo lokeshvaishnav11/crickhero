@@ -66,6 +66,12 @@ export class BetRoute {
       this.betController.deleteCurrentBet,
     )
 
+    this.router.post(
+      '/update-current-bet',
+      Passport.authenticateJWT,
+      this.betController.updateBet,
+    )
+
     this.router.post('/delete-bets', Passport.authenticateJWT, this.betController.deleteBets)
 
     this.router.post(
