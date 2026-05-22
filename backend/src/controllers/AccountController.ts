@@ -938,7 +938,7 @@ export class AccountController extends ApiController {
   // };
 
 
-  getAccountStmtList = async (req: Request, res: Response) => {
+getAccountStmtList = async (req: Request, res: Response) => {
   try {
     const { page = 1 }: any = req.query;
     const limit = 50;
