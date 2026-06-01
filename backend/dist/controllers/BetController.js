@@ -1898,8 +1898,162 @@ class BetController extends ApiController_1.ApiController {
                 return this.fail(res, e);
             }
         });
+        // completedgames = async (req: Request, res: Response): Promise<Response> => {
+        //   // console.log(req.body, req.query, req.user, "reqqqqqbcvvvod");
+        //   function convertDecimalFields(obj: any): any {
+        //     const converted = { ...obj };
+        //     for (const key in converted) {
+        //       const val = converted[key];
+        //       if (val && typeof val === "object" && val._bsontype === "Decimal128") {
+        //         converted[key] = parseFloat(val.toString());
+        //       }
+        //     }
+        //     return converted;
+        //   }
+        //   try {
+        //     const user: any = req.user;
+        //     // const bets = await Bet.find({bet_on! === "CASINO"})
+        //     // Step 1: Find users whose parentStr contains current user ID and have role "user"
+        //     const usersWithThisAsParent = await User.find({
+        //       parentStr: ObjectId(user._id),
+        //       role: "user" as RoleType,
+        //     });
+        //     // Step 2: Extract their _id into an array
+        //     const userIds = usersWithThisAsParent.map((u) => u._id);
+        //     // Step 3: Fetch bets for those users, where betOn !== "CASINO"
+        //     const bets = await Bet.find({
+        //       userId: ObjectId(user._id),
+        //       bet_on: { $ne: "CASINO" as BetOn },
+        //       status: "completed",
+        //     });
+        //     const matches = await Match.find({});
+        //     // console.log(matches,"maatches")
+        //     // Step 5: Combine bets into matches
+        //     const matchesWithBets = await Promise.all(matches.map(async (match) => {
+        //       //@ts-ignore
+        //       const relatedBets = bets.filter((bet) => bet.matchId === match.matchId);
+        //       // ✅ Extract _id from relatedBets
+        //       // console.log( relatedBets, `Related b:`);
+        //       const fancyy = relatedBets.map((bet) => bet.selectionName);
+        //       // console.log(fancyy,"fancyyyy")
+        //       const resultBets = await Fancy.find({
+        //         fancyName: { $in: fancyy },
+        //       })
+        //       // console.log(resultBets,"result bets")
+        //       const fancyLookup = resultBets.reduce((acc, fancy: any) => {
+        //         acc[fancy.fancyName] = fancy;
+        //         return acc;
+        //       }, {} as Record<string, any>);
+        //       // console.log(fancyLookup,"fancy lokkk")
+        //       const enrichedBets = relatedBets.map((bet) => {
+        //         const plainBet = bet.toObject();
+        //         const cleanedBet = convertDecimalFields(plainBet);
+        //         const fancyRaw = fancyLookup[cleanedBet.selectionName];
+        //         const cleanedFancy = fancyRaw ? convertDecimalFields(fancyRaw.toObject()) : undefined;
+        //         return {
+        //           ...cleanedBet,
+        //           fancy: cleanedFancy,
+        //         };
+        //       });
+        //       // console.log(enrichedBets,"enrichedd")
+        //       // console.log(`Related bet IDs for match :`, relatedBetIds);
+        //       // try {
+        //       const user = req.user;
+        //       const id = user["_id"];
+        //       // Get all children of the current user
+        //       const childData = await User.find({ parentId: id });
+        //       const childIds = childData.map(child => child._id);
+        //       // Create a map of childId to their share
+        //       const shareMap = new Map();
+        //       childData.forEach(child => {
+        //         shareMap.set(child._id.toString(), child.share); // Ensure _id is string for comparison
+        //       });
+        //       // Fetch all ledger data for children
+        //       let ldata = await ledger.find({ ChildId: { $in: childIds } });
+        //       if (ldata.length === 0) {
+        //         ldata = await ledger.find({ ParentId: { $in: childIds } });
+        //       }
+        //       // Attach each child's share as superShare
+        //       const updatedLdata = ldata.map(entry => {
+        //         const obj = entry.toObject();
+        //         const share = shareMap.get(obj.ChildId?.toString()) || 0;
+        //         return {
+        //           ...obj,
+        //           superShare: share
+        //         };
+        //       });
+        //       //@ts-ignore
+        //       const relatedBetIds = relatedBets.map((bet) => bet.id);
+        //       const ledgersForTheseBets = updatedLdata.filter(entry =>
+        //         relatedBetIds.includes(entry.betId?.toString())
+        //       );
+        //       //   return this.success(res, updatedLdata);
+        //       // } catch (error) {
+        //       //   console.error("Error fetching ledger data:", error);
+        //       //   return res.status(500).json({ success: false, message: "Internal server error" });
+        //       // }
+        //       // // ✅ Step: Find ledgers where betId in relatedBetIds
+        //       // const ledgersForTheseBets = await ledger.find({
+        //       //   betId: { $in: relatedBetIds },
+        //       // });
+        //       // console.log( ledgersForTheseBets,`Ledgers for match `,);
+        //       return {
+        //         ...match.toObject(),
+        //         bets: enrichedBets,
+        //         ledgers: ledgersForTheseBets,
+        //       };
+        //     }));
+        //     // console.log(bets,"betsts")
+        //     return this.success(res, {
+        //       status: true,
+        //       users: usersWithThisAsParent,
+        //       userIds,
+        //       bets,
+        //       matches: matchesWithBets,
+        //     });
+        //     // // const { matchId } = req.query;
+        //     // let userId: any = { userId: ObjectId(user._id) };
+        //     // // if (user.role !== RoleType.user)
+        //     //   userId = { parentStr: { $in: ObjectId(user._id) } };
+        //     // console.log(userId)
+        //     // console.log(usersWithThisAsParent)
+        //     // // Use `.lean()` here to get plain JS objects
+        //     // const bets: Array<IBet> = await Bet.find({
+        //     //   ...userId,
+        //     //   matchId,
+        //     //   status: "completed",
+        //     // })
+        //     //   .sort({ createdAt: -1 })
+        //     //   .lean();
+        //     // console.log(bets, "cheeek bets completed");
+        //     // // Add 'result' field to bets where bet_on = 'fancy'
+        //     // for (const bet of bets) {
+        //     //   if (bet.bet_on?.toLowerCase() === "fancy" && bet.selectionName) {
+        //     //     const fancyResult = await Fancy.findOne({ fancyName: bet.selectionName, matchId:matchId }).lean();
+        //     //     bet.result = fancyResult || null; // safe to add field now
+        //     //   }
+        //     // }
+        //     // if (bets.length > 0) {
+        //     //   const betFirst = bets[0];
+        //     //   if (betFirst.bet_on !== "CASINO") {
+        //     //     const markets: any = await Market.find({ matchId }).lean();
+        //     //     console.log(markets, "marktesss");
+        //     //     const profitlist = this.getoddsprofit(bets, markets);
+        //     //     return this.success(res, { bets, odds_profit: profitlist });
+        //     //   } else {
+        //     //     const markets: any = await Casino.findOne({ match_id: matchId }).lean();
+        //     //     console.log(JSON.stringify(markets), "marketsmarketsmarketsmarkets");
+        //     //     const profitlist = this.getcasinooddsprofit(bets, markets.event_data.market, markets);
+        //     //     return this.success(res, { bets, odds_profit: profitlist });
+        //     //   }
+        //     // } else {
+        //     //   return this.success(res, { bets: [], odds_profit: [] });
+        //     // }
+        //   } catch (e: any) {
+        //     return this.fail(res, e);
+        //   }
+        // };
         this.completedgames = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            // console.log(req.body, req.query, req.user, "reqqqqqbcvvvod");
             function convertDecimalFields(obj) {
                 const converted = Object.assign({}, obj);
                 for (const key in converted) {
@@ -1912,87 +2066,97 @@ class BetController extends ApiController_1.ApiController {
             }
             try {
                 const user = req.user;
-                // const bets = await Bet.find({bet_on! === "CASINO"})
-                // Step 1: Find users whose parentStr contains current user ID and have role "user"
-                const usersWithThisAsParent = yield User_1.User.find({
-                    parentStr: ObjectId(user._id),
-                    role: "user",
-                });
-                // Step 2: Extract their _id into an array
+                const userId = user._id;
+                // ── Step 1: Saari top-level queries parallel chalao ───────────────────
+                const [usersWithThisAsParent, bets, matches, childData,] = yield Promise.all([
+                    User_1.User.find({ parentStr: ObjectId(userId), role: "user" }).lean(),
+                    Bet_1.Bet.find({
+                        userId: ObjectId(userId),
+                        bet_on: { $ne: "CASINO" },
+                        status: "completed",
+                    }).lean(),
+                    Match_1.Match.find({}).lean(),
+                    User_1.User.find({ parentId: userId }).lean(),
+                ]);
                 const userIds = usersWithThisAsParent.map((u) => u._id);
-                // Step 3: Fetch bets for those users, where betOn !== "CASINO"
-                const bets = yield Bet_1.Bet.find({
-                    userId: ObjectId(user._id),
-                    bet_on: { $ne: "CASINO" },
-                    status: "completed",
-                });
-                const matches = yield Match_1.Match.find({});
-                // console.log(matches,"maatches")
-                // Step 5: Combine bets into matches
-                const matchesWithBets = yield Promise.all(matches.map((match) => __awaiter(this, void 0, void 0, function* () {
-                    //@ts-ignore
-                    const relatedBets = bets.filter((bet) => bet.matchId === match.matchId);
-                    // ✅ Extract _id from relatedBets
-                    // console.log( relatedBets, `Related b:`);
-                    const fancyy = relatedBets.map((bet) => bet.selectionName);
-                    // console.log(fancyy,"fancyyyy")
-                    const resultBets = yield Fancy_1.Fancy.find({
-                        fancyName: { $in: fancyy },
-                    });
-                    // console.log(resultBets,"result bets")
-                    const fancyLookup = resultBets.reduce((acc, fancy) => {
-                        acc[fancy.fancyName] = fancy;
-                        return acc;
-                    }, {});
-                    // console.log(fancyLookup,"fancy lokkk")
-                    const enrichedBets = relatedBets.map((bet) => {
-                        const plainBet = bet.toObject();
-                        const cleanedBet = convertDecimalFields(plainBet);
-                        const fancyRaw = fancyLookup[cleanedBet.selectionName];
-                        const cleanedFancy = fancyRaw ? convertDecimalFields(fancyRaw.toObject()) : undefined;
-                        return Object.assign(Object.assign({}, cleanedBet), { fancy: cleanedFancy });
-                    });
-                    // console.log(enrichedBets,"enrichedd")
-                    // console.log(`Related bet IDs for match :`, relatedBetIds);
-                    // try {
-                    const user = req.user;
-                    const id = user["_id"];
-                    // Get all children of the current user
-                    const childData = yield User_1.User.find({ parentId: id });
-                    const childIds = childData.map(child => child._id);
-                    // Create a map of childId to their share
-                    const shareMap = new Map();
-                    childData.forEach(child => {
-                        shareMap.set(child._id.toString(), child.share); // Ensure _id is string for comparison
-                    });
-                    // Fetch all ledger data for children
-                    let ldata = yield allledager_1.ledger.find({ ChildId: { $in: childIds } });
-                    if (ldata.length === 0) {
-                        ldata = yield allledager_1.ledger.find({ ParentId: { $in: childIds } });
+                const childIds = childData.map((c) => c._id);
+                // ── Step 2: Fancy + Ledger ek saath fetch karo ────────────────────────
+                // Original mein: har match ke andar alag Fancy.find() → N queries
+                // Ab: ek hi $in query — saari fancies ek saath
+                const allSelectionNames = [
+                    ...new Set(bets.map((b) => b.selectionName).filter(Boolean))
+                ];
+                const [fancyResults, ldataRaw] = yield Promise.all([
+                    Fancy_1.Fancy.find({ fancyName: { $in: allSelectionNames } }).lean(),
+                    allledager_1.ledger.find({ ChildId: { $in: childIds } }).lean(),
+                ]);
+                // Original ledger fallback — same logic
+                const ldata = ldataRaw.length > 0
+                    ? ldataRaw
+                    : yield allledager_1.ledger.find({ ParentId: { $in: childIds } }).lean();
+                // ── Step 3: Lookup Maps banao — O(1) access ───────────────────────────
+                // fancyName → cleaned fancy object
+                // Original mein: convertDecimalFields(fancyRaw.toObject()) — same result
+                // .lean() already plain object deta hai, .toObject() ki zaroorat nahi
+                const fancyLookup = fancyResults.reduce((acc, fancy) => {
+                    const cleaned = convertDecimalFields(fancy);
+                    acc[cleaned.fancyName] = cleaned;
+                    return acc;
+                }, {});
+                // childId → share (original shareMap same logic)
+                const shareMap = new Map();
+                childData.forEach((child) => shareMap.set(child._id.toString(), child.share));
+                // betId → ledger entries with superShare
+                // Original mein: updatedLdata filter → same result
+                const ledgerByBetId = ldata.reduce((acc, entry) => {
+                    var _a, _b;
+                    const share = shareMap.get((_a = entry.ChildId) === null || _a === void 0 ? void 0 : _a.toString()) || 0;
+                    const enriched = Object.assign(Object.assign({}, entry), { superShare: share });
+                    // ✅ FIX: .lean() mein sirf _id hota hai, .id virtual nahi hota
+                    const key = (_b = entry.betId) === null || _b === void 0 ? void 0 : _b.toString();
+                    if (key) {
+                        if (!acc[key])
+                            acc[key] = [];
+                        acc[key].push(enriched);
                     }
-                    // Attach each child's share as superShare
-                    const updatedLdata = ldata.map(entry => {
-                        var _a;
-                        const obj = entry.toObject();
-                        const share = shareMap.get((_a = obj.ChildId) === null || _a === void 0 ? void 0 : _a.toString()) || 0;
-                        return Object.assign(Object.assign({}, obj), { superShare: share });
+                    return acc;
+                }, {});
+                // matchId → bets array
+                const betsByMatchId = bets.reduce((acc, bet) => {
+                    var _a;
+                    const key = (_a = bet.matchId) === null || _a === void 0 ? void 0 : _a.toString();
+                    if (key) {
+                        if (!acc[key])
+                            acc[key] = [];
+                        acc[key].push(bet);
+                    }
+                    return acc;
+                }, {});
+                // ── Step 4: Memory join — zero extra DB calls ─────────────────────────
+                // Original: Promise.all + match loop mein 4 DB queries per match
+                // Ab: pure memory join
+                const matchesWithBets = matches.map((match) => {
+                    var _a;
+                    const relatedBets = betsByMatchId[(_a = match.matchId) === null || _a === void 0 ? void 0 : _a.toString()] || [];
+                    // enrichedBets — original format same:
+                    // { ...cleanedBet, fancy: cleanedFancy }
+                    const enrichedBets = relatedBets.map((bet) => {
+                        const cleanedBet = convertDecimalFields(bet);
+                        const fancyRaw = fancyLookup[cleanedBet.selectionName];
+                        return Object.assign(Object.assign({}, cleanedBet), { 
+                            // ✅ Original mein fancyRaw ? cleanedFancy : undefined — same
+                            fancy: fancyRaw || undefined });
                     });
-                    //@ts-ignore
-                    const relatedBetIds = relatedBets.map((bet) => bet.id);
-                    const ledgersForTheseBets = updatedLdata.filter(entry => { var _a; return relatedBetIds.includes((_a = entry.betId) === null || _a === void 0 ? void 0 : _a.toString()); });
-                    //   return this.success(res, updatedLdata);
-                    // } catch (error) {
-                    //   console.error("Error fetching ledger data:", error);
-                    //   return res.status(500).json({ success: false, message: "Internal server error" });
-                    // }
-                    // // ✅ Step: Find ledgers where betId in relatedBetIds
-                    // const ledgersForTheseBets = await ledger.find({
-                    //   betId: { $in: relatedBetIds },
-                    // });
-                    // console.log( ledgersForTheseBets,`Ledgers for match `,);
-                    return Object.assign(Object.assign({}, match.toObject()), { bets: enrichedBets, ledgers: ledgersForTheseBets });
-                })));
-                // console.log(bets,"betsts")
+                    // ledgersForTheseBets — original format same:
+                    // updatedLdata filtered by relatedBetIds
+                    // ✅ FIX: bet._id use karo — .lean() mein .id virtual nahi hota
+                    const ledgersForTheseBets = relatedBets.flatMap((bet) => { var _a; return ledgerByBetId[(_a = bet._id) === null || _a === void 0 ? void 0 : _a.toString()] || []; });
+                    // ✅ Original return format exactly same:
+                    // { ...match.toObject(), bets: enrichedBets, ledgers: ledgersForTheseBets }
+                    // .lean() already plain object deta hai — .toObject() same result
+                    return Object.assign(Object.assign({}, match), { bets: enrichedBets, ledgers: ledgersForTheseBets });
+                });
+                // ✅ Response format exactly same as original
                 return this.success(res, {
                     status: true,
                     users: usersWithThisAsParent,
@@ -2000,44 +2164,6 @@ class BetController extends ApiController_1.ApiController {
                     bets,
                     matches: matchesWithBets,
                 });
-                // // const { matchId } = req.query;
-                // let userId: any = { userId: ObjectId(user._id) };
-                // // if (user.role !== RoleType.user)
-                //   userId = { parentStr: { $in: ObjectId(user._id) } };
-                // console.log(userId)
-                // console.log(usersWithThisAsParent)
-                // // Use `.lean()` here to get plain JS objects
-                // const bets: Array<IBet> = await Bet.find({
-                //   ...userId,
-                //   matchId,
-                //   status: "completed",
-                // })
-                //   .sort({ createdAt: -1 })
-                //   .lean();
-                // console.log(bets, "cheeek bets completed");
-                // // Add 'result' field to bets where bet_on = 'fancy'
-                // for (const bet of bets) {
-                //   if (bet.bet_on?.toLowerCase() === "fancy" && bet.selectionName) {
-                //     const fancyResult = await Fancy.findOne({ fancyName: bet.selectionName, matchId:matchId }).lean();
-                //     bet.result = fancyResult || null; // safe to add field now
-                //   }
-                // }
-                // if (bets.length > 0) {
-                //   const betFirst = bets[0];
-                //   if (betFirst.bet_on !== "CASINO") {
-                //     const markets: any = await Market.find({ matchId }).lean();
-                //     console.log(markets, "marktesss");
-                //     const profitlist = this.getoddsprofit(bets, markets);
-                //     return this.success(res, { bets, odds_profit: profitlist });
-                //   } else {
-                //     const markets: any = await Casino.findOne({ match_id: matchId }).lean();
-                //     console.log(JSON.stringify(markets), "marketsmarketsmarketsmarkets");
-                //     const profitlist = this.getcasinooddsprofit(bets, markets.event_data.market, markets);
-                //     return this.success(res, { bets, odds_profit: profitlist });
-                //   }
-                // } else {
-                //   return this.success(res, { bets: [], odds_profit: [] });
-                // }
             }
             catch (e) {
                 return this.fail(res, e);
@@ -2058,8 +2184,163 @@ class BetController extends ApiController_1.ApiController {
                 return this.fail(res, e);
             }
         });
+        // completedgamescasino = async (req: Request, res: Response): Promise<Response> => {
+        //   // console.log(req.body, req.query, req.user, "reqqqqqbcvvvod");
+        //   function convertDecimalFields(obj: any): any {
+        //     const converted = { ...obj };
+        //     for (const key in converted) {
+        //       const val = converted[key];
+        //       if (val && typeof val === "object" && val._bsontype === "Decimal128") {
+        //         converted[key] = parseFloat(val.toString());
+        //       }
+        //     }
+        //     return converted;
+        //   }
+        //   try {
+        //     const user: any = req.user;
+        //     // const bets = await Bet.find({bet_on! === "CASINO"})
+        //     // Step 1: Find users whose parentStr contains current user ID and have role "user"
+        //     const usersWithThisAsParent = await User.find({
+        //       parentStr: ObjectId(user._id),
+        //       role: "user" as RoleType,
+        //     });
+        //     // Step 2: Extract their _id into an array
+        //     const userIds = usersWithThisAsParent.map((u) => u._id);
+        //     // Step 3: Fetch bets for those users, where betOn !== "CASINO"
+        //     const bets = await Bet.find({
+        //       userId: ObjectId(user._id),
+        //       bet_on: "CASINO" as BetOn,
+        //       status: { $ne: "deleted" },
+        //     });
+        //     // console.log(bets, "bets in completed games casino")
+        //     const matches = await Match.find({});
+        //     // console.log(matches,"maatches")
+        //     // Step 5: Combine bets into matches
+        //     const matchesWithBets = await Promise.all(matches.map(async (match) => {
+        //       //@ts-ignore
+        //       const relatedBets = bets.filter((bet) => bet.matchId === match.matchId);
+        //       // ✅ Extract _id from relatedBets
+        //       // console.log( relatedBets, `Related b:`);
+        //       const fancyy = relatedBets.map((bet) => bet.selectionName);
+        //       // console.log(fancyy,"fancyyyy")
+        //       const resultBets = await Fancy.find({
+        //         fancyName: { $in: fancyy },
+        //       })
+        //       // console.log(resultBets,"result bets")
+        //       const fancyLookup = resultBets.reduce((acc, fancy: any) => {
+        //         acc[fancy.fancyName] = fancy;
+        //         return acc;
+        //       }, {} as Record<string, any>);
+        //       // console.log(fancyLookup,"fancy lokkk")
+        //       const enrichedBets = relatedBets.map((bet) => {
+        //         const plainBet = bet.toObject();
+        //         const cleanedBet = convertDecimalFields(plainBet);
+        //         const fancyRaw = fancyLookup[cleanedBet.selectionName];
+        //         const cleanedFancy = fancyRaw ? convertDecimalFields(fancyRaw.toObject()) : undefined;
+        //         return {
+        //           ...cleanedBet,
+        //           fancy: cleanedFancy,
+        //         };
+        //       });
+        //       // console.log(enrichedBets,"enrichedd")
+        //       // console.log(`Related bet IDs for match :`, relatedBetIds);
+        //       // try {
+        //       const user = req.user;
+        //       const id = user["_id"];
+        //       // Get all children of the current user
+        //       const childData = await User.find({ parentId: id });
+        //       const childIds = childData.map(child => child._id);
+        //       // Create a map of childId to their share
+        //       const shareMap = new Map();
+        //       childData.forEach(child => {
+        //         shareMap.set(child._id.toString(), child.share); // Ensure _id is string for comparison
+        //       });
+        //       // Fetch all ledger data for children
+        //       let ldata = await ledger.find({ ChildId: { $in: childIds } });
+        //       if (ldata.length === 0) {
+        //         ldata = await ledger.find({ ParentId: { $in: childIds } });
+        //       }
+        //       // Attach each child's share as superShare
+        //       const updatedLdata = ldata.map(entry => {
+        //         const obj = entry.toObject();
+        //         const share = shareMap.get(obj.ChildId?.toString()) || 0;
+        //         return {
+        //           ...obj,
+        //           superShare: share
+        //         };
+        //       });
+        //       //@ts-ignore
+        //       const relatedBetIds = relatedBets.map((bet) => bet.id);
+        //       const ledgersForTheseBets = updatedLdata.filter(entry =>
+        //         relatedBetIds.includes(entry.betId?.toString())
+        //       );
+        //       //   return this.success(res, updatedLdata);
+        //       // } catch (error) {
+        //       //   console.error("Error fetching ledger data:", error);
+        //       //   return res.status(500).json({ success: false, message: "Internal server error" });
+        //       // }
+        //       // // ✅ Step: Find ledgers where betId in relatedBetIds
+        //       // const ledgersForTheseBets = await ledger.find({
+        //       //   betId: { $in: relatedBetIds },
+        //       // });
+        //       // console.log( ledgersForTheseBets,`Ledgers for match `,);
+        //       return {
+        //         ...match.toObject(),
+        //         bets: enrichedBets,
+        //         ledgers: ledgersForTheseBets,
+        //       };
+        //     }));
+        //     // console.log(bets,"betsts")
+        //     return this.success(res, {
+        //       status: true,
+        //       // users: usersWithThisAsParent,
+        //       // userIds,
+        //       bets,
+        //       // matches: matchesWithBets,
+        //     });
+        //     // // const { matchId } = req.query;
+        //     // let userId: any = { userId: ObjectId(user._id) };
+        //     // // if (user.role !== RoleType.user)
+        //     //   userId = { parentStr: { $in: ObjectId(user._id) } };
+        //     // console.log(userId)
+        //     // console.log(usersWithThisAsParent)
+        //     // // Use `.lean()` here to get plain JS objects
+        //     // const bets: Array<IBet> = await Bet.find({
+        //     //   ...userId,
+        //     //   matchId,
+        //     //   status: "completed",
+        //     // })
+        //     //   .sort({ createdAt: -1 })
+        //     //   .lean();
+        //     // console.log(bets, "cheeek bets completed");
+        //     // // Add 'result' field to bets where bet_on = 'fancy'
+        //     // for (const bet of bets) {
+        //     //   if (bet.bet_on?.toLowerCase() === "fancy" && bet.selectionName) {
+        //     //     const fancyResult = await Fancy.findOne({ fancyName: bet.selectionName, matchId:matchId }).lean();
+        //     //     bet.result = fancyResult || null; // safe to add field now
+        //     //   }
+        //     // }
+        //     // if (bets.length > 0) {
+        //     //   const betFirst = bets[0];
+        //     //   if (betFirst.bet_on !== "CASINO") {
+        //     //     const markets: any = await Market.find({ matchId }).lean();
+        //     //     console.log(markets, "marktesss");
+        //     //     const profitlist = this.getoddsprofit(bets, markets);
+        //     //     return this.success(res, { bets, odds_profit: profitlist });
+        //     //   } else {
+        //     //     const markets: any = await Casino.findOne({ match_id: matchId }).lean();
+        //     //     console.log(JSON.stringify(markets), "marketsmarketsmarketsmarkets");
+        //     //     const profitlist = this.getcasinooddsprofit(bets, markets.event_data.market, markets);
+        //     //     return this.success(res, { bets, odds_profit: profitlist });
+        //     //   }
+        //     // } else {
+        //     //   return this.success(res, { bets: [], odds_profit: [] });
+        //     // }
+        //   } catch (e: any) {
+        //     return this.fail(res, e);
+        //   }
+        // };
         this.completedgamescasino = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            // console.log(req.body, req.query, req.user, "reqqqqqbcvvvod");
             function convertDecimalFields(obj) {
                 const converted = Object.assign({}, obj);
                 for (const key in converted) {
@@ -2072,133 +2353,25 @@ class BetController extends ApiController_1.ApiController {
             }
             try {
                 const user = req.user;
-                // const bets = await Bet.find({bet_on! === "CASINO"})
-                // Step 1: Find users whose parentStr contains current user ID and have role "user"
-                const usersWithThisAsParent = yield User_1.User.find({
-                    parentStr: ObjectId(user._id),
-                    role: "user",
-                });
-                // Step 2: Extract their _id into an array
-                const userIds = usersWithThisAsParent.map((u) => u._id);
-                // Step 3: Fetch bets for those users, where betOn !== "CASINO"
+                // ─────────────────────────────────────────────────────────────────────
+                // ✅ MAIN FIX: Original mein matchesWithBets ka pura Promise.all loop
+                //    chal raha tha — lekin response mein sirf `bets` ja raha tha!
+                //    matlab matches, fancy, ledger — sab ka kaam BEKAR tha.
+                //
+                //    Ab sirf ek query — seedha bets fetch karo aur bhejo.
+                // ─────────────────────────────────────────────────────────────────────
                 const bets = yield Bet_1.Bet.find({
                     userId: ObjectId(user._id),
                     bet_on: "CASINO",
                     status: { $ne: "deleted" },
-                });
-                // console.log(bets, "bets in completed games casino")
-                const matches = yield Match_1.Match.find({});
-                // console.log(matches,"maatches")
-                // Step 5: Combine bets into matches
-                const matchesWithBets = yield Promise.all(matches.map((match) => __awaiter(this, void 0, void 0, function* () {
-                    //@ts-ignore
-                    const relatedBets = bets.filter((bet) => bet.matchId === match.matchId);
-                    // ✅ Extract _id from relatedBets
-                    // console.log( relatedBets, `Related b:`);
-                    const fancyy = relatedBets.map((bet) => bet.selectionName);
-                    // console.log(fancyy,"fancyyyy")
-                    const resultBets = yield Fancy_1.Fancy.find({
-                        fancyName: { $in: fancyy },
-                    });
-                    // console.log(resultBets,"result bets")
-                    const fancyLookup = resultBets.reduce((acc, fancy) => {
-                        acc[fancy.fancyName] = fancy;
-                        return acc;
-                    }, {});
-                    // console.log(fancyLookup,"fancy lokkk")
-                    const enrichedBets = relatedBets.map((bet) => {
-                        const plainBet = bet.toObject();
-                        const cleanedBet = convertDecimalFields(plainBet);
-                        const fancyRaw = fancyLookup[cleanedBet.selectionName];
-                        const cleanedFancy = fancyRaw ? convertDecimalFields(fancyRaw.toObject()) : undefined;
-                        return Object.assign(Object.assign({}, cleanedBet), { fancy: cleanedFancy });
-                    });
-                    // console.log(enrichedBets,"enrichedd")
-                    // console.log(`Related bet IDs for match :`, relatedBetIds);
-                    // try {
-                    const user = req.user;
-                    const id = user["_id"];
-                    // Get all children of the current user
-                    const childData = yield User_1.User.find({ parentId: id });
-                    const childIds = childData.map(child => child._id);
-                    // Create a map of childId to their share
-                    const shareMap = new Map();
-                    childData.forEach(child => {
-                        shareMap.set(child._id.toString(), child.share); // Ensure _id is string for comparison
-                    });
-                    // Fetch all ledger data for children
-                    let ldata = yield allledager_1.ledger.find({ ChildId: { $in: childIds } });
-                    if (ldata.length === 0) {
-                        ldata = yield allledager_1.ledger.find({ ParentId: { $in: childIds } });
-                    }
-                    // Attach each child's share as superShare
-                    const updatedLdata = ldata.map(entry => {
-                        var _a;
-                        const obj = entry.toObject();
-                        const share = shareMap.get((_a = obj.ChildId) === null || _a === void 0 ? void 0 : _a.toString()) || 0;
-                        return Object.assign(Object.assign({}, obj), { superShare: share });
-                    });
-                    //@ts-ignore
-                    const relatedBetIds = relatedBets.map((bet) => bet.id);
-                    const ledgersForTheseBets = updatedLdata.filter(entry => { var _a; return relatedBetIds.includes((_a = entry.betId) === null || _a === void 0 ? void 0 : _a.toString()); });
-                    //   return this.success(res, updatedLdata);
-                    // } catch (error) {
-                    //   console.error("Error fetching ledger data:", error);
-                    //   return res.status(500).json({ success: false, message: "Internal server error" });
-                    // }
-                    // // ✅ Step: Find ledgers where betId in relatedBetIds
-                    // const ledgersForTheseBets = await ledger.find({
-                    //   betId: { $in: relatedBetIds },
-                    // });
-                    // console.log( ledgersForTheseBets,`Ledgers for match `,);
-                    return Object.assign(Object.assign({}, match.toObject()), { bets: enrichedBets, ledgers: ledgersForTheseBets });
-                })));
-                // console.log(bets,"betsts")
+                }).lean();
+                // convertDecimalFields apply karo — original mein bhi ho raha tha
+                const cleanedBets = bets.map((bet) => convertDecimalFields(bet));
+                // ✅ Response format exactly same as original
                 return this.success(res, {
                     status: true,
-                    // users: usersWithThisAsParent,
-                    // userIds,
-                    bets,
-                    // matches: matchesWithBets,
+                    bets: cleanedBets,
                 });
-                // // const { matchId } = req.query;
-                // let userId: any = { userId: ObjectId(user._id) };
-                // // if (user.role !== RoleType.user)
-                //   userId = { parentStr: { $in: ObjectId(user._id) } };
-                // console.log(userId)
-                // console.log(usersWithThisAsParent)
-                // // Use `.lean()` here to get plain JS objects
-                // const bets: Array<IBet> = await Bet.find({
-                //   ...userId,
-                //   matchId,
-                //   status: "completed",
-                // })
-                //   .sort({ createdAt: -1 })
-                //   .lean();
-                // console.log(bets, "cheeek bets completed");
-                // // Add 'result' field to bets where bet_on = 'fancy'
-                // for (const bet of bets) {
-                //   if (bet.bet_on?.toLowerCase() === "fancy" && bet.selectionName) {
-                //     const fancyResult = await Fancy.findOne({ fancyName: bet.selectionName, matchId:matchId }).lean();
-                //     bet.result = fancyResult || null; // safe to add field now
-                //   }
-                // }
-                // if (bets.length > 0) {
-                //   const betFirst = bets[0];
-                //   if (betFirst.bet_on !== "CASINO") {
-                //     const markets: any = await Market.find({ matchId }).lean();
-                //     console.log(markets, "marktesss");
-                //     const profitlist = this.getoddsprofit(bets, markets);
-                //     return this.success(res, { bets, odds_profit: profitlist });
-                //   } else {
-                //     const markets: any = await Casino.findOne({ match_id: matchId }).lean();
-                //     console.log(JSON.stringify(markets), "marketsmarketsmarketsmarkets");
-                //     const profitlist = this.getcasinooddsprofit(bets, markets.event_data.market, markets);
-                //     return this.success(res, { bets, odds_profit: profitlist });
-                //   }
-                // } else {
-                //   return this.success(res, { bets: [], odds_profit: [] });
-                // }
             }
             catch (e) {
                 return this.fail(res, e);
@@ -3324,6 +3497,37 @@ class BetController extends ApiController_1.ApiController {
                 let exposer2 = yield this.getcasinoexposerfunction({ _id: userbet.userId }, true, json);
                 // balance event here
                 return this.success(res, { success: true }, 'Bet deleted successfully');
+            }
+            catch (e) {
+                console.log(e);
+                return this.fail(res, e);
+            }
+        });
+        this.updateBet = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { betId, isBack, odds } = req.body;
+                if (!betId) {
+                    return this.fail(res, "betId required");
+                }
+                const updatedBet = yield Bet_1.Bet.findOneAndUpdate({ _id: ObjectId(betId) }, {
+                    $set: {
+                        isBack: isBack,
+                        // odds: odds,
+                        // matchedOdds:odds,
+                        isc: "Y"
+                    },
+                }, { new: true, timestamps: false } // 🔥 updated data return karega
+                );
+                if (!updatedBet) {
+                    return this.fail(res, "Bet not found");
+                }
+                // 🔥 OPTIONAL (agar pnl / loss recalc karna ho)
+                // const betAmount = parseFloat(updatedBet?.loss?.toString() || "0")
+                // 🔥 exposer recalc (same tera logic)
+                // const json: any = {}
+                // await this.getexposerfunction({ _id: updatedBet.userId }, true, json)
+                // await this.getcasinoexposerfunction({ _id: updatedBet.userId }, true, json)
+                return this.success(res, updatedBet, "Bet updated successfully");
             }
             catch (e) {
                 console.log(e);
