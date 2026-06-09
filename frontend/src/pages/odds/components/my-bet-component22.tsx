@@ -283,8 +283,8 @@ const MyBetComponent22 = () => {
       const data = res?.data?.data;
       setBets(data?.bets || []);
       dispatch(setbetlist(data?.bets || []));
-      dispatch(setBookMarketList(data?.odds_profit || {}));
-      dispatch(setBetCount(data?.bets?.length || 0));
+      // dispatch(setBookMarketList(data?.odds_profit || {}));
+      // dispatch(setBetCount(data?.bets?.length || 0));
     });
   }, [getCurrentMatch, getCasinoCurrentMatch, refresh]);
 
