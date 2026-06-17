@@ -7,7 +7,7 @@ const SportIframeTV = () => {
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <iframe
-        src={`https://stream-s-43.uhdmovies.online/casino-stream?id=${type}`}
+        src={`https://stream-s-43.uhdmovies.online/sports-stream?btid=${type}`}
         title="Casino Stream"
         width="100%"
         height="100%"
