@@ -56,7 +56,9 @@ const Page404 = React.lazy(() => import('../pages/404/404'))
 const CasinoWrapper = React.lazy(() => import('../pages/CasinoList/CasinoWrapper'))
 const ResultList = React.lazy(() => import('../pages/CasinoList/component/_common/ResultList'))
 const SecurityAuth = React.lazy(() => import('../pages/Rules/SecurityAuth'))
-
+const CasinoIframeTV = React.lazy(()=> import("../pages/CasinoList/CasinoIframe"))
+const SportIframeTV = React.lazy(() =>import("../pages/CasinoList/Soprtiframe")
+);
 const Routers = () => {
   const routes = [
     {
@@ -93,7 +95,9 @@ const Routers = () => {
             { path: 'password', element: <Newpassword /> },
             { path: 'complete-games', element: <Completegames /> },
 
-            
+            { path: 'casino-iframe-tv/:type', element: <CasinoIframeTV /> },
+            { path: 'sport-iframe-tv/:type', element: <SportIframeTV /> },
+
             
             { path: 'match/:sportId/:status?', element: <NewDashboard /> },
             { path: 'odds/:matchId', element: <Odds /> },
