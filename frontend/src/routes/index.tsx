@@ -74,8 +74,8 @@ const Routers = () => {
       path: '/admin/transaction-password',
       element: <TransactionPassword />,
     },
-    { path: 'casino-iframe-tv/:type', element: <CasinoIframeTV /> },
-    { path: 'sport-iframe-tv/:type', element: <SportIframeTV /> },
+    { path: '/casino-iframe-tv/:type', element: <CasinoIframeTV /> },
+    { path: '/sport-iframe-tv/:type', element: <SportIframeTV /> },
     {
       path: '/',
       element: <CheckTransactionPassword />,
