@@ -80,7 +80,7 @@
 //           >
 //             <h4 className="text-center" style={{ color: "#11283E" }}>
 //               <div className="log-logo m-b-20 text-center">
-//                 <img src="/imgs/clogo.png" className="logo-login" />
+//                 <img src="/imgs/clogo.jpeg" className="logo-login" />
 //               </div>
 //             </h4>
 //             <form
