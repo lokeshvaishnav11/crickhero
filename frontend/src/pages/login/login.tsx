@@ -292,7 +292,7 @@ const Login = () => {
             }}
           >
             <div className="log-logo m-b-20 text-center">
-              <img src="/imgs/clogo.png" className="logo-login" />
+              <img src="/imgs/starlogo.png" className="logo-login" />
             </div>
 
             <form onSubmit={handleSubmit} autoComplete="off">
