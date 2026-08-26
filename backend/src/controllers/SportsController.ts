@@ -412,7 +412,7 @@ class SportsController extends ApiController {
     return false
   }
 
-  async fancyData(match: IMatch) {
+   async fancyData(match: IMatch) {
     const fancy = await sportsService.getSession(match.matchId, match.sportId)
     // console.log(fancy, "fancy data from backend ibn ths codew sw")
     // const fancyone = fancy?.data?.sports?.filter((m: any) =>
@@ -424,26 +424,26 @@ class SportsController extends ApiController {
     //   )
 
     const fancyone = fancy?.data?.sports?.filter((m: any) => {
-  const name = m?.RunnerName || "";
+      const name = m?.RunnerName || "";
 
-  return (
-    (m.gtype === "session" || m.gtype === "fancy1") &&
+      return (
+        (m.gtype === "session" || m.gtype === "fancy1") &&
 
-    // must include
-    ! name.includes(".3 over ") &&
-    ! name.includes(" ball run ") &&
+        // must include
+        !name.includes(".3 over ") &&
+        !name.includes(" ball run ") &&
 
-    // must NOT include
-    !name.includes(" run bhav ") &&
-    !name.includes(" run bhav") &&
-    !name.includes(" Run bhav ") &&
-    !name.includes(" bhav ") &&
-    !name.includes(" Caught out ") &&
-    !name.includes(" ball No ") &&
-    !name.includes(" Nextman ") &&
-    !name.includes("Power Surge ")
-  );
-});
+        // must NOT include
+        !name.includes(" run bhav ") &&
+        !name.includes(" run bhav") &&
+        !name.includes(" Run bhav ") &&
+        !name.includes(" bhav ") &&
+        !name.includes(" Caught out ") &&
+        !name.includes(" ball No ") &&
+        !name.includes(" Nextman ") &&
+        !name.includes("Power Surge ")
+      );
+    });
     console.log(fancyone, "fancy one data from backend ibn ths codew sw")
     if (fancy.data.sports) {
       await fancyone?.map(async (market: any) => {
