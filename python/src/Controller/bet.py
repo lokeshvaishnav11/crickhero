@@ -11,13 +11,14 @@ import traceback
 from decimal import Decimal
 from flask import jsonify
 from datetime import datetime
+import time
 
 
 # superNodeUrl = "http://localhost:3025/api/"
 # casinoNodeUrl = "http://localhost:3025/api/"
 
-superNodeUrl = "https://socket2.taj44.com/api/"
-casinoNodeUrl = "https://socket2.taj44.com/api/"
+superNodeUrl = "https://super.a2zlive.shop/api/"
+casinoNodeUrl = "https://super.a2zlive.shop/api/"
 
 defaultRatio: any = {
     "ownRatio": 100,
@@ -146,7 +147,7 @@ def validate_bet(payload, userInfo, balance, settings, matchInfo):
                 if matchInfo and matchInfo['inPlayFancyMinLimit'] > payload['stack'] or matchInfo and matchInfo['inPlayFancyMaxLimit'] < payload['stack']:
                     return {"message": 'failed', "notification": f"Check Maximum or Minimum Bet Limit"}
             if payload['marketName'] == "Bookmaker":
-                if matchInfo and matchInfo['inPlayBookMinLimit'] > payload['stack'] or matchInfo and matchInfo['inPlayBookMaxLimit'] < payload['stack']:
+                if matchInfo and matchInfo['inPlayMinLimit'] > payload['stack'] or matchInfo and matchInfo['inPlayMaxLimit'] < payload['stack']:
                     return {"message": 'failed', "notification": f"Check Maximum or Minimum Bet Limit"}            
             elif payload['betOn'] == "MATCH_ODDS" and payload['marketName'] != "Bookmaker":
                 if matchInfo and matchInfo['inPlayMinLimit'] > payload['stack'] or matchInfo and matchInfo['inPlayMaxLimit'] < payload['stack']:
@@ -243,6 +244,11 @@ def placebet(betObj, userInfo):
 
 
             matchInfo = GetMatchInfo(payload)
+            if payload.get("betOn") != "CASINO":
+             bet_delay = int(matchInfo.get("betDelay", 0) or 0)
+
+             if bet_delay > 0:
+                    time.sleep(bet_delay / 1000)
             # print(matchInfo)
             # print("matchInfo")
             event_id = payload['eventId']
@@ -1059,10 +1065,12 @@ def getexposerfunctionone(user, update_status, current_bet):
                 fancy_expo += float(sum(abs(val) for val in fancypl.values()))
 
                 if(current_bet['bet_on']== "FANCY"):
-                    if(fancy_expo > 250000):
+                    fancy_total_limit = float(matchInfo.get("fancyTotalLimit", 0) or 0)
+                    if(fancy_expo > fancy_total_limit):
                         return 'ffailed'
                 else:
-                    if(main_expo > 1000000):
+                    main_total_limit = float(matchInfo.get("inPlayBookMaxLimit", 0) or 0)
+                    if(main_expo > main_total_limit):
                         return 'mafailed'      
 
             

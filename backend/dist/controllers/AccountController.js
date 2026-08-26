@@ -537,9 +537,11 @@ class AccountController extends ApiController_1.ApiController {
         //   }
         // };
         this.getAccountStmtList = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            var _a, _b, _c, _d, _e;
             try {
-                const { page } = req.query;
+                const { page = 1 } = req.query;
+                const limit = 50;
+                const skip = (Number(page) - 1) * limit;
                 const { startDate, endDate, reportType, userId } = req.body;
                 const user = req.user;
                 const userid = userId
@@ -552,106 +554,76 @@ class AccountController extends ApiController_1.ApiController {
                         $lte: new Date(`${endDate} 23:59:59`),
                     },
                 };
-                if (reportType === 'game') {
+                if (reportType === "game")
                     filter.betId = { $ne: null };
-                }
-                if (reportType === 'chip') {
+                if (reportType === "chip")
                     filter.betId = null;
-                }
                 const aggregateFilter = [
                     { $match: filter },
-                    // betId → ObjectId
                     {
                         $addFields: {
                             convertedId: {
                                 $cond: [
-                                    { $and: [{ $ne: ['$betId', null] }, { $ne: ['$betId', ''] }] },
-                                    { $toObjectId: '$betId' },
+                                    { $and: [{ $ne: ["$betId", null] }, { $ne: ["$betId", ""] }] },
+                                    { $toObjectId: "$betId" },
                                     null,
                                 ],
                             },
                         },
                     },
-                    // 🔹 NORMAL BETS (sportId != 900)
                     {
                         $lookup: {
-                            from: 'bets',
-                            let: { betId: '$convertedId', sportId: '$sportId' },
-                            pipeline: [
-                                {
-                                    $match: {
-                                        $expr: {
-                                            $and: [
-                                                { $eq: ['$_id', '$$betId'] },
-                                                { $ne: ['$$sportId', 900] },
-                                            ],
-                                        },
-                                    },
-                                },
-                            ],
-                            as: 'normalBet',
+                            from: "bets",
+                            localField: "convertedId",
+                            foreignField: "_id",
+                            as: "normalBet",
                         },
                     },
-                    // 🔹 MATKA BETS (sportId = 900)
                     {
                         $lookup: {
-                            from: 'matkabets',
-                            let: { betId: '$convertedId', sportId: '$sportId' },
-                            pipeline: [
-                                {
-                                    $match: {
-                                        $expr: {
-                                            $and: [
-                                                { $eq: ['$_id', '$$betId'] },
-                                                { $eq: ['$$sportId', 900] },
-                                            ],
-                                        },
-                                    },
-                                },
-                            ],
-                            as: 'matkaBet',
+                            from: "matkabets",
+                            localField: "convertedId",
+                            foreignField: "_id",
+                            as: "matkaBet",
                         },
                     },
-                    // 🔹 Select correct bet
                     {
                         $addFields: {
                             result: {
                                 $cond: [
-                                    { $eq: ['$sportId', 900] },
-                                    { $arrayElemAt: ['$matkaBet', 0] },
-                                    { $arrayElemAt: ['$normalBet', 0] },
+                                    { $eq: ["$sportId", 900] },
+                                    { $arrayElemAt: ["$matkaBet", 0] },
+                                    { $arrayElemAt: ["$normalBet", 0] },
                                 ],
                             },
                         },
                     },
-                    // 🔹 roundid for Matka
                     {
                         $addFields: {
                             roundKey: {
                                 $cond: [
-                                    { $eq: ['$sportId', 900] },
-                                    '$result.roundid',
+                                    { $eq: ["$sportId", 900] },
+                                    "$result.roundid",
                                     null,
                                 ],
                             },
                         },
                     },
-                    // 🔹 BALANCE
                     {
                         $lookup: {
-                            from: 'balances',
-                            localField: 'userId',
-                            foreignField: 'userId',
-                            as: 'balanceData',
+                            from: "balances",
+                            localField: "userId",
+                            foreignField: "userId",
+                            as: "balanceData",
                         },
                     },
                     {
                         $unwind: {
-                            path: '$balanceData',
+                            path: "$balanceData",
                             preserveNullAndEmptyArrays: true,
                         },
                     },
-                    // 🔹 FACET
+                    // 🔥 GROUP (same logic)
                     {
                         $facet: {
                             nonNullSelections: [
@@ -660,31 +632,32 @@ class AccountController extends ApiController_1.ApiController {
                                     $group: {
                                         _id: {
                                             $cond: [
-                                                // ✅ MATKA → roundid wise
-                                                { $eq: ['$sportId', 900] },
-                                                { roundId: '$roundKey' },
-                                                // ✅ NORMAL → match + market
+                                                { $eq: ["$sportId", 900] },
+                                                { roundId: "$roundKey" },
                                                 {
-                                                    matchId: '$matchId',
+                                                    matchId: "$matchId",
                                                     marketId: {
-                                                        $ifNull: ['$result.marketId', '$result.marketid'],
+                                                        $ifNull: [
+                                                            "$result.marketId",
+                                                            "$result.marketid",
+                                                        ],
                                                     },
                                                 },
                                             ],
                                         },
-                                        userId: { $first: '$userId' },
-                                        sportId: { $first: '$sportId' },
-                                        roundId: { $first: '$roundKey' },
-                                        matchId: { $first: '$matchId' },
-                                        amount: { $sum: '$amount' },
-                                        txnType: { $first: '$txnType' },
-                                        txnBy: { $first: '$txnBy' },
-                                        openBal: { $first: '$openBal' },
-                                        narration: { $first: '$narration' },
-                                        createdAt: { $first: '$createdAt' },
-                                        type: { $first: '$type' },
-                                        balance: { $first: '$balanceData.balance' },
-                                        allBets: { $push: '$$ROOT' },
+                                        userId: { $first: "$userId" },
+                                        sportId: { $first: "$sportId" },
+                                        roundId: { $first: "$roundKey" },
+                                        matchId: { $first: "$matchId" },
+                                        amount: { $sum: "$amount" },
+                                        txnType: { $first: "$txnType" },
+                                        txnBy: { $first: "$txnBy" },
+                                        openBal: { $first: "$openBal" },
+                                        narration: { $first: "$narration" },
+                                        createdAt: { $max: "$createdAt" },
+                                        type: { $first: "$type" },
+                                        balance: { $first: "$balanceData.balance" },
+                                        allBets: { $push: "$$ROOT" },
                                     },
                                 },
                             ],
@@ -692,7 +665,7 @@ class AccountController extends ApiController_1.ApiController {
                                 { $match: { convertedId: null } },
                                 {
                                     $addFields: {
-                                        balance: '$balanceData.balance',
+                                        balance: "$balanceData.balance",
                                     },
                                 },
                             ],
@@ -701,15 +674,27 @@ class AccountController extends ApiController_1.ApiController {
                     {
                         $project: {
                             data: {
-                                $concatArrays: ['$nonNullSelections', '$nullSelections'],
+                                $concatArrays: ["$nonNullSelections", "$nullSelections"],
                             },
                         },
                     },
-                    { $unwind: '$data' },
-                    { $replaceRoot: { newRoot: '$data' } },
+                    { $unwind: "$data" },
+                    { $replaceRoot: { newRoot: "$data" } },
+                    // 🔥 SORT
                     { $sort: { createdAt: 1 } },
+                    // 🔥 FINAL PAGINATION
+                    {
+                        $facet: {
+                            metadata: [{ $count: "total" }],
+                            data: [{ $skip: skip }, { $limit: limit }],
+                        },
+                    },
                 ];
-                const accountStatement = yield AccountStatement_1.AccoutStatement.aggregate(aggregateFilter);
+                // ✅ EXECUTE AGGREGATE
+                const result = yield AccountStatement_1.AccoutStatement.aggregate(aggregateFilter);
+                // ✅ FIX RESPONSE STRUCTURE
+                const items = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.data) || [];
+                const total = ((_d = (_c = (_b = result[0]) === null || _b === void 0 ? void 0 : _b.metadata) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.total) || 0;
                 // 🔹 OPENING BALANCE
                 const openingBalance = yield AccountStatement_1.AccoutStatement.aggregate([
                     {
@@ -723,13 +708,16 @@ class AccountController extends ApiController_1.ApiController {
                     {
                         $group: {
                             _id: null,
-                            total: { $sum: '$amount' },
+                            total: { $sum: "$amount" },
                         },
                     },
                 ]);
                 return this.success(res, {
-                    items: accountStatement,
-                    openingBalance: ((_a = openingBalance === null || openingBalance === void 0 ? void 0 : openingBalance[0]) === null || _a === void 0 ? void 0 : _a.total) || 0,
+                    items,
+                    total,
+                    page: Number(page),
+                    totalPages: Math.ceil(total / limit),
+                    openingBalance: ((_e = openingBalance === null || openingBalance === void 0 ? void 0 : openingBalance[0]) === null || _e === void 0 ? void 0 : _e.total) || 0,
                 });
             }
             catch (e) {

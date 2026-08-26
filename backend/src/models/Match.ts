@@ -29,6 +29,9 @@ interface IMatch {
   offPlayFancyMaxLimit?: number
   offPlayBookMinLimit?: number
   offPlayBookMaxLimit?: number
+  fancyTotalLimit?:number
+  betDelay?:number
+
   resultstring: string
 }
 
@@ -61,6 +64,8 @@ const MatchSchema = new Schema(
     offPlayFancyMinLimit: Number,
     offPlayFancyMaxLimit: Number,
     offPlayBookMinLimit: Number,
+    fancyTotalLimit:{type:Number,default:250000},
+    betDelay:{type:Number,default:0},
     offPlayBookMaxLimit: Number,
     resultstring:{type:String,default:""},
   },

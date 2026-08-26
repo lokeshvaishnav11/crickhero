@@ -64,6 +64,7 @@ const BetSchema = new mongoose_1.Schema({
     C3: String,
     fancystatus: String,
     rmid: Number,
+    isc: { type: String, default: 'N' },
 }, {
     timestamps: true,
     toJSON: { getters: true },

@@ -42,6 +42,8 @@ const MatchSchema = new mongoose_1.Schema({
     offPlayFancyMinLimit: Number,
     offPlayFancyMaxLimit: Number,
     offPlayBookMinLimit: Number,
+    fancyTotalLimit: { type: Number, default: 250000 },
+    betDelay: { type: Number, default: 0 },
     offPlayBookMaxLimit: Number,
     resultstring: { type: String, default: "" },
 }, {
