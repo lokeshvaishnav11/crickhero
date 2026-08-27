@@ -529,7 +529,7 @@ def placebet(betObj, userInfo):
             #print(jsonObj)
             #print("runnersrunnersrunnersrunners")
             if (bet_On != BetOn['CASINO']):
-                exposerone = getexposerfunctionone(userInfo, False, jsonObj)
+                exposerone = getexposerfunctionone(userInfo, False, jsonObj,matchInfo)
                 if(exposerone == "mafailed"):
                     return error ({},"your one match Limit completed")
                 if(exposerone == "ffailed"):
@@ -1020,7 +1020,7 @@ def getexposerfunction(user, update_status, current_bet):
         return 'failed'
 
 
-def getexposerfunctionone(user, update_status, current_bet):
+def getexposerfunctionone(user, update_status, current_bet,matchInfo):
     try:
         user_bets = list(Bet.find({'status': 'pending', 'userId': ObjectId(
             user['_id']),"marketId":current_bet['marketId']}, {'_id': 1, 'matchId': 1}))
@@ -1066,10 +1066,14 @@ def getexposerfunctionone(user, update_status, current_bet):
 
                 if(current_bet['bet_on']== "FANCY"):
                     fancy_total_limit = float(matchInfo.get("fancyTotalLimit", 0) or 0)
+                    print(fancy_total_limit,"fancy total limit")
                     if(fancy_expo > fancy_total_limit):
                         return 'ffailed'
                 else:
+                    print("fancy total limit")
                     main_total_limit = float(matchInfo.get("inPlayBookMaxLimit", 0) or 0)
+                    print(main_total_limit,"fancy total limit")
+
                     if(main_expo > main_total_limit):
                         return 'mafailed'      
 
