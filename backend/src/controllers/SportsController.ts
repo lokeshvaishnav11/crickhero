@@ -343,44 +343,44 @@ class SportsController extends ApiController {
   // }
 
   async bookmakermarketesData(match: IMatch) {
-  const markets = await sportsService.getBookmakerMarkets(match);
+    const markets = await sportsService.getBookmakerMarkets(match);
 
-  if (!markets?.data?.sports?.length) return false;
+    if (!markets?.data?.sports?.length) return false;
 
-  let bookmakerSaved = false;
+    let bookmakerSaved = false;
 
-  for (const market of markets.data.sports) {
-    // ✅ ONLY BOOKMAKER
-    // if (market.marketName !== "Bookmaker") continue;
+    for (const market of markets.data.sports) {
+      // ✅ ONLY BOOKMAKER
+      if (market.marketName !== "Bookmaker") continue;
 
-    // ✅ already one bookmaker saved → ignore others
-    if (bookmakerSaved) break;
+      // ✅ already one bookmaker saved → ignore others
+      if (bookmakerSaved) break;
 
-    const marketsData: IMarket = {
-      seriesId: match.seriesId,
-      sportId: match.sportId,
-      matchId: match.matchId,
-      marketId: market.marketId,
-      marketName: "Bookmaker",
-      marketStartTime: market.marketStartTime,
-      runners: market.runners.sort(
-        (a: any, b: any) => a.sortPriority - b.sortPriority
-      ),
-      isActive: true,
-      oddsType: OddsType.BM,
-    };
+      const marketsData: IMarket = {
+        seriesId: match.seriesId,
+        sportId: match.sportId,
+        matchId: match.matchId,
+        marketId: market.marketId,
+        marketName: "Bookmaker",
+        marketStartTime: market.marketStartTime,
+        runners: market.runners.sort(
+          (a: any, b: any) => a.sortPriority - b.sortPriority
+        ),
+        isActive: true,
+        oddsType: OddsType.BM,
+      };
 
-    await Market.findOneAndUpdate(
-      { marketId: market.marketId, matchId: match.matchId },
-      marketsData,
-      { upsert: true, new: true }
-    );
+      await Market.findOneAndUpdate(
+        { marketId: market.marketId, matchId: match.matchId },
+        marketsData,
+        { upsert: true, new: true }
+      );
 
-    bookmakerSaved = true;
+      bookmakerSaved = true;
+    }
+
+    return bookmakerSaved;
   }
-
-  return bookmakerSaved;
-}
 
 
   async t10MarketesData(match: IMatch) {

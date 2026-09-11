@@ -282,6 +282,8 @@ export const AvailableToBackLay = React.memo(({ selections, market, runner }: Pr
 
       const classforbox = market.oddsType !== OddsType.BM ? "box-1" : "box-2";
 
+      console.log(lay,"lay")
+
       return (
         <div
           onClick={() => onBet(false, lay)}

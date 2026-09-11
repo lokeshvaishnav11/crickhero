@@ -208,7 +208,7 @@ class MatchOdds extends React.PureComponent<
                 </div>
                 <div className="table-header">
                   <div
-                    style={{ fontSize: "18px", backgroundColor: "#8fd9a8" }}
+                    style={{ fontSize: "18px", backgroundColor: "#020421",color:"white" }}
                     className={`float-left country-name ${classforheadingfirst} min-max`}
                   >
                     <b />
@@ -235,8 +235,10 @@ class MatchOdds extends React.PureComponent<
 
                   <div
                     style={{
-                      backgroundColor: "#8fd9a8",
-                      borderColor: "#8fd9a8",
+                      backgroundColor: "#020421",
+                      borderColor: "#020421",
+                                            color:"white"
+
                     }}
                     className={`back ${classforheading} float-left text-center`}
                   >
@@ -244,8 +246,9 @@ class MatchOdds extends React.PureComponent<
                   </div>
                   <div
                     style={{
-                      backgroundColor: "#8fd9a8",
-                      borderColor: "#8fd9a8",
+                      backgroundColor: "#020421",
+                      borderColor: "#020421",
+                      color:"white"
                     }}
                     className={`lay ${classforheading} float-left text-center`}
                   >
@@ -340,9 +343,7 @@ class MatchOdds extends React.PureComponent<
                               </p>
                             </div>
 
-                            {/* <div style={{backgroundColor:"#e2dddd" , border:"none"}} className='box-1 float-left border-0' /> */}
-                            {/* <div style={{backgroundColor:"#e2dddd" , border:"none"}} className='box-1 float-left border-0' /><div style={{backgroundColor:"#e2dddd" , border:"none"}} className='box-1 float-left border-0' /> */}
-                            {/* <div style={{backgroundColor:"#e2dddd" , border:"none"}} className='box-1 float-left border-0' /> */}
+                         
                             <AvailableToBackLay
                               selections={runner.ex}
                               selectionsPrev={selectionsPrev}
