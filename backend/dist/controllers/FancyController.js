@@ -789,6 +789,272 @@ class FancyController extends ApiController_1.ApiController {
                 return this.fail(res, e);
             }
         });
+        this.rollbackFancyResultByUser = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { marketId, matchId } = req.body;
+                const { userIds } = req.body;
+                // =====================================================
+                // VALIDATION
+                // userId field me username(s) aa rahe hain
+                // Example:
+                // "user1"
+                // "user1,user2,user3"
+                // "user1 user2 user3"
+                // newline separated bhi chalega
+                // =====================================================
+                if (!marketId || !matchId) {
+                    return this.fail(res, "marketId and matchId are required");
+                }
+                if (!userIds || !String(userIds).trim()) {
+                    return this.fail(res, "User ID is required");
+                }
+                // =====================================================
+                // USERNAME STRING -> USERNAME ARRAY
+                // =====================================================
+                const usernames = Array.from(new Set(String(userIds)
+                    .split(/[\s,]+/)
+                    .map((item) => item.trim())
+                    .filter(Boolean)));
+                if (!usernames.length) {
+                    return this.fail(res, "Please enter valid username");
+                }
+                // =====================================================
+                // FIND USERS BY USERNAME
+                // =====================================================
+                const users = yield User_1.User.find({
+                    username: {
+                        $in: usernames,
+                    },
+                }).lean();
+                if (!users.length) {
+                    return this.fail(res, "User not found");
+                }
+                // =====================================================
+                // ACTUAL MONGO USER IDS
+                // =====================================================
+                const selectedUserIds = users.map((item) => ObjectId(item._id));
+                console.log("Fancy Specific Rollback Usernames:", usernames);
+                console.log("Fancy Specific Rollback UserIds:", selectedUserIds);
+                // =====================================================
+                // GET ONLY SELECTED USERS COMPLETED FANCY BETS
+                // =====================================================
+                const userbet = yield Bet_1.Bet.aggregate([
+                    {
+                        $match: {
+                            status: "completed",
+                            bet_on: Bet_1.BetOn.FANCY,
+                            marketId: marketId,
+                            matchId: parseInt(matchId),
+                            userId: {
+                                $in: selectedUserIds,
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: "$userId",
+                            allBets: {
+                                $push: "$$ROOT",
+                            },
+                        },
+                    },
+                    {
+                        $addFields: {
+                            allBets: {
+                                $map: {
+                                    input: "$allBets",
+                                    as: "bet",
+                                    in: {
+                                        $mergeObjects: [
+                                            "$$bet",
+                                            {
+                                                odds: {
+                                                    $toString: "$$bet.odds",
+                                                },
+                                                volume: {
+                                                    $toString: "$$bet.volume",
+                                                },
+                                                stack: {
+                                                    $toString: "$$bet.stack",
+                                                },
+                                                pnl: {
+                                                    $toString: "$$bet.pnl",
+                                                },
+                                                commission: {
+                                                    $toString: "$$bet.commission",
+                                                },
+                                                matchedOdds: {
+                                                    $toString: "$$bet.matchedOdds",
+                                                },
+                                                loss: {
+                                                    $toString: "$$bet.loss",
+                                                },
+                                                profitLoss: {
+                                                    $toString: "$$bet.profitLoss",
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ]);
+                // =====================================================
+                // NO COMPLETED BET FOUND
+                // =====================================================
+                if (!userbet || userbet.length === 0) {
+                    return this.fail(res, "No completed Fancy bet found for selected user(s)");
+                }
+                // =====================================================
+                // THESE LISTS ARE USED BY EXISTING
+                // updateUserAccountStatement()
+                // =====================================================
+                const userIdList = [];
+                const parentIdList = [];
+                // =====================================================
+                // ROLLBACK EACH SELECTED USER
+                // =====================================================
+                const declare_result = userbet.map((Item) => __awaiter(this, void 0, void 0, function* () {
+                    const allbets = Item.allBets || [];
+                    const settle_single = allbets.map((ItemBetList, indexBetList) => __awaiter(this, void 0, void 0, function* () {
+                        // ---------------------------------------------
+                        // EXISTING SOCKET ROLLBACK
+                        // ---------------------------------------------
+                        var _a;
+                        user_socket_1.default.onRollbackPlaceBet(ItemBetList);
+                        // ---------------------------------------------
+                        // DELETE ACCOUNT STATEMENT
+                        // FOR THIS BET
+                        // ---------------------------------------------
+                        yield AccountStatement_1.AccoutStatement.deleteMany({
+                            betId: ObjectId(ItemBetList._id),
+                        });
+                        // ---------------------------------------------
+                        // GET PARENT HIERARCHY
+                        // ---------------------------------------------
+                        if (indexBetList === 0 &&
+                            ((_a = ItemBetList === null || ItemBetList === void 0 ? void 0 : ItemBetList.ratioStr) === null || _a === void 0 ? void 0 : _a.allRatio) &&
+                            Array.isArray(ItemBetList.ratioStr.allRatio)) {
+                            ItemBetList.ratioStr.allRatio.forEach((ItemParentStr) => {
+                                if (ItemParentStr &&
+                                    ItemParentStr.parent) {
+                                    const parentObjectId = ObjectId(ItemParentStr.parent);
+                                    parentIdList.push(parentObjectId);
+                                    userIdList.push(parentObjectId);
+                                }
+                            });
+                        }
+                    }));
+                    // IMPORTANT:
+                    // Original code me Promise.all await nahi tha.
+                    // Yahan properly wait kar rahe hain.
+                    yield Promise.all(settle_single);
+                    // Current selected user
+                    userIdList.push(ObjectId(Item._id));
+                }));
+                yield Promise.all(declare_result);
+                // =====================================================
+                // DELETE LEDGER
+                // ONLY SELECTED USERS' BETS
+                // =====================================================
+                const ledgerPromises = userbet.flatMap((betGroup) => betGroup.allBets.map((singleBet) => __awaiter(this, void 0, void 0, function* () {
+                    const result = yield allledager_1.ledger.deleteMany({
+                        betId: ObjectId(singleBet._id),
+                    });
+                    return {
+                        betId: singleBet._id,
+                        deletedCount: result.deletedCount,
+                    };
+                })));
+                const deletedLedgers = yield Promise.all(ledgerPromises);
+                console.log("Deleted Ledgers:", deletedLedgers);
+                // =====================================================
+                // SELECTED USERS' BETS:
+                //
+                // completed -> pending
+                //
+                // IMPORTANT:
+                // Baaki users ki completed bets touch nahi hongi.
+                // =====================================================
+                const betUpdateResult = yield Bet_1.Bet.updateMany({
+                    userId: {
+                        $in: selectedUserIds,
+                    },
+                    matchId: parseInt(matchId),
+                    marketId: marketId,
+                    bet_on: Bet_1.BetOn.FANCY,
+                    status: "completed",
+                }, {
+                    $set: {
+                        status: "pending",
+                    },
+                });
+                console.log("Fancy Bets Rollback:", betUpdateResult);
+                // =====================================================
+                // UNIQUE USER IDS
+                //
+                // ObjectId ko directly Set me dedupe nahi karenge,
+                // string me convert karke dedupe karenge.
+                //
+                // Array.from use kiya hai taaki TS target wala
+                // downlevelIteration error na aaye.
+                // =====================================================
+                const uniqueUserIdStrings = Array.from(new Set(userIdList.map((id) => String(id))));
+                const uniqueUserIds = uniqueUserIdStrings.map((id) => ObjectId(id));
+                // =====================================================
+                // UNIQUE PARENT IDS
+                // =====================================================
+                const uniqueParentIdStrings = Array.from(new Set(parentIdList.map((id) => String(id))));
+                const uniqueParentIds = uniqueParentIdStrings.map((id) => ObjectId(id));
+                // =====================================================
+                // RECALCULATE USER/PARENT ACCOUNT STATEMENT
+                // =====================================================
+                if (uniqueUserIds.length > 0) {
+                    yield this.updateUserAccountStatement(uniqueUserIds, uniqueParentIds);
+                }
+                // =====================================================
+                // FANCY RESULT EMPTY
+                //
+                // Ye required hai tumhare flow me.
+                //
+                // Selected users ki bets ab pending hain.
+                // Baaki users ki bets completed hain.
+                //
+                // Jab same result dobara declare hoga,
+                // result declaration pending bets uthayega,
+                // isliye selected users hi dobara settle honge.
+                // =====================================================
+                yield Fancy_1.Fancy.updateOne({
+                    matchId: matchId,
+                    marketId: marketId,
+                }, {
+                    $set: {
+                        result: "",
+                    },
+                });
+                // =====================================================
+                // RESPONSE
+                // =====================================================
+                return this.success(res, {
+                    usernames: users.map((item) => item.username),
+                    userIds: selectedUserIds,
+                    matchId: parseInt(matchId),
+                    marketId: marketId,
+                    rolledBackUsers: userbet.length,
+                    rolledBackBets: userbet.reduce((total, item) => {
+                        var _a;
+                        return total +
+                            (((_a = item.allBets) === null || _a === void 0 ? void 0 : _a.length) || 0);
+                    }, 0),
+                    bets: userbet,
+                }, "User Fancy Result Rollback Successfully");
+            }
+            catch (e) {
+                console.log("Fancy User Rollback Error:", e);
+                return this.fail(res, e);
+            }
+        });
         this.rollbackfancyresultbyapi = ({ marketId, matchId }) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const userbet = yield Bet_1.Bet.aggregate([
@@ -1041,7 +1307,7 @@ class FancyController extends ApiController_1.ApiController {
                 const betController = new BetController_1.BetController();
                 const json = {};
                 const promiseStatment = userIds.map((ItemUserId) => __awaiter(this, void 0, void 0, function* () {
-                    var _a;
+                    var _b;
                     let exposer = 0;
                     let cexposer = 0;
                     let balancePnl = 0;
@@ -1085,7 +1351,7 @@ class FancyController extends ApiController_1.ApiController {
                                 },
                             },
                         ]);
-                        var totalCommissionLega = ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.totalCommissionLega) || 0;
+                        var totalCommissionLega = ((_b = result[0]) === null || _b === void 0 ? void 0 : _b.totalCommissionLega) || 0;
                         balancePnl = blanceData.pnl_;
                         var blancedata = blanceData.Balance_ + 0;
                         console.log("balance Pnl", blancedata, blanceData.Balance_);
@@ -1121,7 +1387,7 @@ class FancyController extends ApiController_1.ApiController {
                 const betController = new BetController_1.BetController();
                 const json = {};
                 const promiseStatment = userIds.map((ItemUserId) => __awaiter(this, void 0, void 0, function* () {
-                    var _b;
+                    var _c;
                     let exposer = 0;
                     let mexposer = 0;
                     let balancePnl = 0;
@@ -1139,7 +1405,7 @@ class FancyController extends ApiController_1.ApiController {
                                 },
                             },
                         ]);
-                        var totalCommissionLega = ((_b = result[0]) === null || _b === void 0 ? void 0 : _b.totalCommissionLega) || 0;
+                        var totalCommissionLega = ((_c = result[0]) === null || _c === void 0 ? void 0 : _c.totalCommissionLega) || 0;
                         balancePnl = blanceData.pnl_;
                         blancedata = blanceData.Balance_ + 0;
                         var totalexpr = blancedata - exposer - mexposer;
@@ -1738,6 +2004,7 @@ class FancyController extends ApiController_1.ApiController {
                             selectionId: ItemBetList.selectionId,
                             sportId: ItemBetList.sportId,
                         });
+                        yield this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, Bet_1.BetOn.MATCH_ODDS);
                         if (indexBetList == 0) {
                             ItemBetList.ratioStr.allRatio.map((ItemParentStr) => {
                                 parentIdList.push(ItemParentStr.parent);
@@ -1758,7 +2025,6 @@ class FancyController extends ApiController_1.ApiController {
                 if (unique.length > 0) {
                     // const ObjectId = require("mongoose").Types.ObjectId;
                     const userProfits = yield Promise.all(unique.map((userId) => __awaiter(this, void 0, void 0, function* () {
-                        var _c, _d, _e;
                         const bets = yield Bet_1.Bet.find({
                             userId: ObjectId(userId),
                             status: "completed",
@@ -1771,7 +2037,7 @@ class FancyController extends ApiController_1.ApiController {
                         // };
                         if (bets.length > 0) {
                             const totalProfitLoss = yield bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
-                            yield this.cal9xbro(userId, totalProfitLoss, ((_c = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _c === void 0 ? void 0 : _c.marketId.toString()) + ((_d = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _d === void 0 ? void 0 : _d.marketName), matchId, (_e = bets[0]) === null || _e === void 0 ? void 0 : _e._id, Bet_1.BetOn.MATCH_ODDS);
+                            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId.toString() + bets?.[0]?.marketName, matchId, bets[0]?._id, BetOn.MATCH_ODDS);
                         }
                     })));
                     // Optional: log or use the result
@@ -1859,6 +2125,7 @@ class FancyController extends ApiController_1.ApiController {
                             selectionId: ItemBetList.selectionId,
                             sportId: ItemBetList.sportId,
                         });
+                        yield this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, Bet_1.BetOn.MATCH_ODDS);
                         if (indexBetList == 0) {
                             ItemBetList.ratioStr.allRatio.map((ItemParentStr) => {
                                 parentIdList.push(ItemParentStr.parent);
@@ -1881,7 +2148,6 @@ class FancyController extends ApiController_1.ApiController {
                 if (unique.length > 0) {
                     // const ObjectId = require("mongoose").Types.ObjectId;
                     const userProfits = yield Promise.all(unique.map((userId) => __awaiter(this, void 0, void 0, function* () {
-                        var _f, _g;
                         const bets = yield Bet_1.Bet.find({
                             userId: ObjectId(userId),
                             status: "completed",
@@ -1894,7 +2160,7 @@ class FancyController extends ApiController_1.ApiController {
                         //   totalProfitLoss
                         // };
                         if (bets.length > 0) {
-                            yield this.cal9xbro(userId, totalProfitLoss, ((_f = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _f === void 0 ? void 0 : _f.marketId) + ((_g = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _g === void 0 ? void 0 : _g.marketName), matchId, bets[0]._id, Bet_1.BetOn.MATCH_ODDS);
+                            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
                         }
                     })));
                     // Optional: log or use the result
@@ -2008,7 +2274,7 @@ class FancyController extends ApiController_1.ApiController {
                 if (unique.length > 0) {
                     // const ObjectId = require("mongoose").Types.ObjectId;
                     const userProfits = yield Promise.all(unique.map((userId) => __awaiter(this, void 0, void 0, function* () {
-                        var _h, _j, _k;
+                        var _d, _e, _f;
                         const bets = yield Bet_1.Bet.find({
                             userId: ObjectId(userId),
                             status: "completed",
@@ -2021,7 +2287,7 @@ class FancyController extends ApiController_1.ApiController {
                         //   totalProfitLoss
                         // };
                         if (bets.length > 0) {
-                            yield this.cal9xbro(userId, totalProfitLoss, ((_h = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _h === void 0 ? void 0 : _h.marketId) + ((_j = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _j === void 0 ? void 0 : _j.marketName), matchId, (_k = bets[0]) === null || _k === void 0 ? void 0 : _k._id, Bet_1.BetOn.MATCH_ODDS);
+                            yield this.cal9xbro(userId, totalProfitLoss, ((_d = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _d === void 0 ? void 0 : _d.marketId) + ((_e = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _e === void 0 ? void 0 : _e.marketName), matchId, (_f = bets[0]) === null || _f === void 0 ? void 0 : _f._id, Bet_1.BetOn.MATCH_ODDS);
                         }
                     })));
                     // Optional: log or use the result
@@ -2154,12 +2420,12 @@ class FancyController extends ApiController_1.ApiController {
             }
         });
         this.addprofitlosstouser = ({ userId, bet_id, profit_loss, matchId, narration, sportsType, selectionId, sportId, }) => __awaiter(this, void 0, void 0, function* () {
-            var _l, _m, _o, _p;
+            var _g, _h, _j, _k;
             const user = yield User_1.User.findOne({ _id: userId });
             const user_parent = yield User_1.User.findOne({ _id: user === null || user === void 0 ? void 0 : user.parentId });
             const parent_ratio = sportId == 5000
-                ? (_m = (_l = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _l === void 0 ? void 0 : _l[4]) === null || _m === void 0 ? void 0 : _m.allRatio
-                : (_p = (_o = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _o === void 0 ? void 0 : _o[sportsType]) === null || _p === void 0 ? void 0 : _p.allRatio;
+                ? (_h = (_g = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _g === void 0 ? void 0 : _g[4]) === null || _h === void 0 ? void 0 : _h.allRatio
+                : (_k = (_j = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _j === void 0 ? void 0 : _j[sportsType]) === null || _k === void 0 ? void 0 : _k.allRatio;
             let scommision = 0;
             let mtcommission = 0;
             const betdata = yield Bet_1.Bet.findOne({ _id: bet_id });

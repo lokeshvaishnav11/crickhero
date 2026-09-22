@@ -23,6 +23,7 @@ class FancyRoutes {
         this.router.get('/rollback-result-market-wise', Passport_1.default.authenticateJWT, Http_1.default.adminUserRequest, this.FancyController.rollbackmarketwiseresult);
         this.router.post('/get-cas-casino-play-url', Passport_1.default.authenticateJWT, this.FancyController.getCasPlayUrl);
         this.router.get('/fancy-result-rollback', Passport_1.default.authenticateJWT, Http_1.default.adminUserRequest, this.FancyController.rollbackfancyresult);
+        this.router.post('/fancy-result-user-rollback', Passport_1.default.authenticateJWT, Http_1.default.adminUserRequest, this.FancyController.rollbackFancyResultByUser);
         this.router.post('/check-user-pnl', Passport_1.default.authenticateJWT, this.FancyController.apiupdateUserBal);
         this.router.post('/place-matka-bet', Passport_1.default.authenticateJWT, this.FancyController.placeMatkabet);
         // this.router.get(

@@ -66,6 +66,13 @@ export class FancyRoutes {
       this.FancyController.rollbackfancyresult,
     )
 
+     this.router.post(
+      '/fancy-result-user-rollback',
+      Passport.authenticateJWT,
+      Http.adminUserRequest,
+      this.FancyController.rollbackFancyResultByUser,
+    )
+
     this.router.post(
       '/check-user-pnl',
       Passport.authenticateJWT,

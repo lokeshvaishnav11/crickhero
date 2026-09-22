@@ -1001,6 +1001,504 @@ placeMatkabet = async (req: Request, res: Response): Promise<Response> => {
     }
   };
 
+rollbackFancyResultByUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+const { marketId, matchId }: any = req.body;    
+const { userIds }: any = req.body;
+
+    // =====================================================
+    // VALIDATION
+    // userId field me username(s) aa rahe hain
+    // Example:
+    // "user1"
+    // "user1,user2,user3"
+    // "user1 user2 user3"
+    // newline separated bhi chalega
+    // =====================================================
+
+    if (!marketId || !matchId) {
+      return this.fail(
+        res,
+        "marketId and matchId are required"
+      );
+    }
+
+    if (!userIds || !String(userIds).trim()) {
+      return this.fail(
+        res,
+        "User ID is required"
+      );
+    }
+
+    // =====================================================
+    // USERNAME STRING -> USERNAME ARRAY
+    // =====================================================
+
+    const usernames = Array.from(
+      new Set(
+        String(userIds)
+          .split(/[\s,]+/)
+          .map((item: string) => item.trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (!usernames.length) {
+      return this.fail(
+        res,
+        "Please enter valid username"
+      );
+    }
+
+    // =====================================================
+    // FIND USERS BY USERNAME
+    // =====================================================
+
+    const users: any[] = await User.find({
+      username: {
+        $in: usernames,
+      },
+    }).lean();
+
+    if (!users.length) {
+      return this.fail(
+        res,
+        "User not found"
+      );
+    }
+
+    // =====================================================
+    // ACTUAL MONGO USER IDS
+    // =====================================================
+
+    const selectedUserIds: any[] = users.map(
+      (item: any) => ObjectId(item._id)
+    );
+
+    console.log(
+      "Fancy Specific Rollback Usernames:",
+      usernames
+    );
+
+    console.log(
+      "Fancy Specific Rollback UserIds:",
+      selectedUserIds
+    );
+
+    // =====================================================
+    // GET ONLY SELECTED USERS COMPLETED FANCY BETS
+    // =====================================================
+
+    const userbet: any = await Bet.aggregate([
+      {
+        $match: {
+          status: "completed",
+
+          bet_on: BetOn.FANCY,
+
+          marketId: marketId,
+
+          matchId: parseInt(matchId),
+
+          userId: {
+            $in: selectedUserIds,
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$userId",
+
+          allBets: {
+            $push: "$$ROOT",
+          },
+        },
+      },
+
+      {
+        $addFields: {
+          allBets: {
+            $map: {
+              input: "$allBets",
+
+              as: "bet",
+
+              in: {
+                $mergeObjects: [
+                  "$$bet",
+
+                  {
+                    odds: {
+                      $toString: "$$bet.odds",
+                    },
+
+                    volume: {
+                      $toString: "$$bet.volume",
+                    },
+
+                    stack: {
+                      $toString: "$$bet.stack",
+                    },
+
+                    pnl: {
+                      $toString: "$$bet.pnl",
+                    },
+
+                    commission: {
+                      $toString: "$$bet.commission",
+                    },
+
+                    matchedOdds: {
+                      $toString: "$$bet.matchedOdds",
+                    },
+
+                    loss: {
+                      $toString: "$$bet.loss",
+                    },
+
+                    profitLoss: {
+                      $toString: "$$bet.profitLoss",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    // =====================================================
+    // NO COMPLETED BET FOUND
+    // =====================================================
+
+    if (!userbet || userbet.length === 0) {
+      return this.fail(
+        res,
+        "No completed Fancy bet found for selected user(s)"
+      );
+    }
+
+    // =====================================================
+    // THESE LISTS ARE USED BY EXISTING
+    // updateUserAccountStatement()
+    // =====================================================
+
+    const userIdList: any[] = [];
+    const parentIdList: any[] = [];
+
+    // =====================================================
+    // ROLLBACK EACH SELECTED USER
+    // =====================================================
+
+    const declare_result = userbet.map(
+      async (Item: any) => {
+        const allbets: any[] =
+          Item.allBets || [];
+
+        const settle_single = allbets.map(
+          async (
+            ItemBetList: any,
+            indexBetList: number
+          ) => {
+            // ---------------------------------------------
+            // EXISTING SOCKET ROLLBACK
+            // ---------------------------------------------
+
+            UserSocket.onRollbackPlaceBet(
+              ItemBetList
+            );
+
+            // ---------------------------------------------
+            // DELETE ACCOUNT STATEMENT
+            // FOR THIS BET
+            // ---------------------------------------------
+
+            await AccoutStatement.deleteMany({
+              betId: ObjectId(
+                ItemBetList._id
+              ),
+            });
+
+            // ---------------------------------------------
+            // GET PARENT HIERARCHY
+            // ---------------------------------------------
+
+            if (
+              indexBetList === 0 &&
+              ItemBetList?.ratioStr?.allRatio &&
+              Array.isArray(
+                ItemBetList.ratioStr.allRatio
+              )
+            ) {
+              ItemBetList.ratioStr.allRatio.forEach(
+                (ItemParentStr: any) => {
+                  if (
+                    ItemParentStr &&
+                    ItemParentStr.parent
+                  ) {
+                    const parentObjectId =
+                      ObjectId(
+                        ItemParentStr.parent
+                      );
+
+                    parentIdList.push(
+                      parentObjectId
+                    );
+
+                    userIdList.push(
+                      parentObjectId
+                    );
+                  }
+                }
+              );
+            }
+          }
+        );
+
+        // IMPORTANT:
+        // Original code me Promise.all await nahi tha.
+        // Yahan properly wait kar rahe hain.
+        await Promise.all(
+          settle_single
+        );
+
+        // Current selected user
+        userIdList.push(
+          ObjectId(Item._id)
+        );
+      }
+    );
+
+    await Promise.all(
+      declare_result
+    );
+
+    // =====================================================
+    // DELETE LEDGER
+    // ONLY SELECTED USERS' BETS
+    // =====================================================
+
+    const ledgerPromises =
+      userbet.flatMap(
+        (betGroup: any) =>
+          betGroup.allBets.map(
+            async (singleBet: any) => {
+              const result =
+                await ledger.deleteMany({
+                  betId: ObjectId(
+                    singleBet._id
+                  ),
+                });
+
+              return {
+                betId:
+                  singleBet._id,
+
+                deletedCount:
+                  result.deletedCount,
+              };
+            }
+          )
+      );
+
+    const deletedLedgers =
+      await Promise.all(
+        ledgerPromises
+      );
+
+    console.log(
+      "Deleted Ledgers:",
+      deletedLedgers
+    );
+
+    // =====================================================
+    // SELECTED USERS' BETS:
+    //
+    // completed -> pending
+    //
+    // IMPORTANT:
+    // Baaki users ki completed bets touch nahi hongi.
+    // =====================================================
+
+    const betUpdateResult =
+      await Bet.updateMany(
+        {
+          userId: {
+            $in: selectedUserIds,
+          },
+
+          matchId:
+            parseInt(matchId),
+
+          marketId:
+            marketId,
+
+          bet_on:
+            BetOn.FANCY,
+
+          status:
+            "completed",
+        },
+
+        {
+          $set: {
+            status:
+              "pending",
+          },
+        }
+      );
+
+    console.log(
+      "Fancy Bets Rollback:",
+      betUpdateResult
+    );
+
+    // =====================================================
+    // UNIQUE USER IDS
+    //
+    // ObjectId ko directly Set me dedupe nahi karenge,
+    // string me convert karke dedupe karenge.
+    //
+    // Array.from use kiya hai taaki TS target wala
+    // downlevelIteration error na aaye.
+    // =====================================================
+
+    const uniqueUserIdStrings =
+      Array.from(
+        new Set(
+          userIdList.map(
+            (id: any) =>
+              String(id)
+          )
+        )
+      );
+
+    const uniqueUserIds: any[] =
+      uniqueUserIdStrings.map(
+        (id: string) =>
+          ObjectId(id)
+      );
+
+    // =====================================================
+    // UNIQUE PARENT IDS
+    // =====================================================
+
+    const uniqueParentIdStrings =
+      Array.from(
+        new Set(
+          parentIdList.map(
+            (id: any) =>
+              String(id)
+          )
+        )
+      );
+
+    const uniqueParentIds: any[] =
+      uniqueParentIdStrings.map(
+        (id: string) =>
+          ObjectId(id)
+      );
+
+    // =====================================================
+    // RECALCULATE USER/PARENT ACCOUNT STATEMENT
+    // =====================================================
+
+    if (uniqueUserIds.length > 0) {
+      await this.updateUserAccountStatement(
+        uniqueUserIds,
+        uniqueParentIds
+      );
+    }
+
+    // =====================================================
+    // FANCY RESULT EMPTY
+    //
+    // Ye required hai tumhare flow me.
+    //
+    // Selected users ki bets ab pending hain.
+    // Baaki users ki bets completed hain.
+    //
+    // Jab same result dobara declare hoga,
+    // result declaration pending bets uthayega,
+    // isliye selected users hi dobara settle honge.
+    // =====================================================
+
+    await Fancy.updateOne(
+      {
+        matchId: matchId,
+        marketId: marketId,
+      },
+
+      {
+        $set: {
+          result: "",
+        },
+      }
+    );
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
+
+    return this.success(
+      res,
+      {
+        usernames:
+          users.map(
+            (item: any) =>
+              item.username
+          ),
+
+        userIds:
+          selectedUserIds,
+
+        matchId:
+          parseInt(matchId),
+
+        marketId:
+          marketId,
+
+        rolledBackUsers:
+          userbet.length,
+
+        rolledBackBets:
+          userbet.reduce(
+            (
+              total: number,
+              item: any
+            ) =>
+              total +
+              (
+                item.allBets
+                  ?.length || 0
+              ),
+            0
+          ),
+
+        bets:
+          userbet,
+      },
+
+      "User Fancy Result Rollback Successfully"
+    );
+  } catch (e: any) {
+    console.log(
+      "Fancy User Rollback Error:",
+      e
+    );
+
+    return this.fail(
+      res,
+      e
+    );
+  }
+};
+
   rollbackfancyresultbyapi = async ({ marketId, matchId }: any) => {
     try {
       const userbet: any = await Bet.aggregate([
@@ -2080,6 +2578,9 @@ placeMatkabet = async (req: Request, res: Response): Promise<Response> => {
               sportId: ItemBetList.sportId,
             });
 
+              await this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, BetOn.MATCH_ODDS)
+
+
             if (indexBetList == 0) {
               ItemBetList.ratioStr.allRatio.map((ItemParentStr: any) => {
                 parentIdList.push(ItemParentStr.parent);
@@ -2122,7 +2623,7 @@ placeMatkabet = async (req: Request, res: Response): Promise<Response> => {
           if (bets.length > 0) {
             const totalProfitLoss = await bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
 
-            await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId.toString() + bets?.[0]?.marketName, matchId, bets[0]?._id, BetOn.MATCH_ODDS);
+            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId.toString() + bets?.[0]?.marketName, matchId, bets[0]?._id, BetOn.MATCH_ODDS);
           }
         }));
 
@@ -2216,6 +2717,7 @@ placeMatkabet = async (req: Request, res: Response): Promise<Response> => {
               selectionId: ItemBetList.selectionId,
               sportId: ItemBetList.sportId,
             });
+             await this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, BetOn.MATCH_ODDS)
 
             if (indexBetList == 0) {
               ItemBetList.ratioStr.allRatio.map((ItemParentStr: any) => {
@@ -2261,7 +2763,7 @@ placeMatkabet = async (req: Request, res: Response): Promise<Response> => {
           //   totalProfitLoss
           // };
           if (bets.length > 0) {
-            await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
+            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
           }
         }));
 

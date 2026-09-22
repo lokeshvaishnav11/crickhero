@@ -322,57 +322,331 @@ class DealersController extends ApiController_1.ApiController {
             }
         });
     }
+    // async signUp(req: Request, res: Response): Promise<Response> {
+    //   const session = await Database.getInstance().startSession()
+    //   let changePassAndTxn:any = false;
+    //   try {
+    //     session.startTransaction()
+    //     const {
+    //       password,
+    //       username,
+    //       code,
+    //       share,
+    //       pshare,
+    //       mcom,
+    //       matcom,
+    //       scom,
+    //       sendamount,
+    //       parent,
+    //       partnership,
+    //       role,
+    //       fullname,
+    //       city,
+    //       phone,
+    //       creditRefrences,
+    //       exposerLimit,
+    //       userSetting,
+    //       // transactionPassword,
+    //     } = req.body
+    //     console.log(req.body, "req body for code ")
+    //     const currentUser: any = req.user
+    //     const currentUserData: any = await User.findOne({ _id: currentUser._id })
+    //     // return await currentUserData
+    //     //   .compareTxnPassword(transactionPassword)
+    //     //   .then(async (isMatch: any) => {
+    //     //     if (!isMatch) {
+    //     //       return this.fail(res, 'Transaction Password not matched')
+    //     //     }
+    //         const user = await User.findOne({ username })
+    //         if (user) {
+    //           return this.fail(res, 'User already exixts!')
+    //         }
+    //         if(share > pshare){
+    //           return this.fail(res, 'Share must be less than or equal to Parent Share')
+    //         }
+    //         const parentUser: any = await User.findOne({ username: parent })
+    //         if (!parentUser) {
+    //           return this.fail(res, 'Parent User not exixts!')
+    //         }
+    //         let updatedUserSetting = {}
+    //         if (role !== RoleType.user) {
+    //           changePassAndTxn = true;
+    //           let errorMsg = this.validatePartnership(
+    //             JSON.parse(JSON.stringify(parentUser)),
+    //             partnership,
+    //           )
+    //           if (errorMsg) {
+    //             return this.fail(
+    //               res,
+    //               `${errorMsg.game} Partnership should be less then or equal ${errorMsg.parentRatio}`,
+    //             )
+    //           }
+    //           console.log(userSetting,parentUser.userSetting,"Lokesh bhaiii")
+    //           updatedUserSetting = this.getUserSetting(userSetting, parentUser.userSetting)
+    //           console.log(updatedUserSetting, "updated user setting")
+    //         }
+    //         if (role === RoleType.user) {
+    //           if (!exposerLimit) return this.fail(res, 'Exposer Limit is reuired field')
+    //             // console.log(userSetting,parentUser.userSetting,"Lokesh")
+    //           updatedUserSetting = this.getUserSetting(userSetting, parentUser.userSetting)
+    //          console.log(updatedUserSetting,"Lokesh")
+    //         }
+    //         const newUserParentStr: string[] = parentUser?.parentStr
+    //           ? [...parentUser?.parentStr, parentUser._id]
+    //           : [parentUser._id]
+    //         // User Setting
+    //         const userData: IUser = {
+    //           username:code,
+    //           share,
+    //           pshare,
+    //           mcom,
+    //           matcom,
+    //           scom,
+    //           code:username,
+    //           password,
+    //           role: role,
+    //           level: parentUser.level + 1,
+    //           isLogin: true,
+    //           betLock: true,
+    //           betLock2: true,
+    //           betLock3: true,
+    //           parentId: parentUser._id,
+    //           parentStr: newUserParentStr,
+    //           fullName: fullname,
+    //           city: city,
+    //           phone: phone,
+    //           creditRefrences,
+    //           exposerLimit,
+    //           changePassAndTxn,
+    //           userSetting: updatedUserSetting,
+    //         }
+    //         const newUser = new User(userData)
+    //         await newUser.save({ session })
+    //         if (newUser._id !== undefined && newUser._id !== null) {
+    //           await Balance.findOneAndUpdate(
+    //             { userId: newUser._id },
+    //             { balance: 0, exposer: 0, profitLoss: -creditRefrences, mainBalance: 0 , commision:0 },
+    //             { new: true, upsert: true, session },
+    //           )
+    //           if (role === RoleType.user) {
+    //             // const parentStack: any = await UserBetStake.findOne({
+    //             //   userId: parentUser._id,
+    //             // }).lean()
+    //             // delete parentStack._id
+    //             // delete parentStack.userId
+    //             await UserBetStake.findOneAndUpdate(
+    //               { userId: newUser._id },
+    //               { ...defaultStack },
+    //               { new: true, upsert: true, session },
+    //             )
+    //           }
+    //         }
+    //         if (newUser._id !== undefined && newUser._id !== null && role !== RoleType.user) {
+    //           const partnershipData = this.partnership(
+    //             partnership,
+    //             parentUser.partnership!,
+    //             newUser._id,
+    //           )
+    //           await User.findOneAndUpdate(
+    //             { _id: newUser._id },
+    //             { partnership: partnershipData },
+    //             { session },
+    //           )
+    //         }
+    //         await session.commitTransaction()
+    //         session.endSession()
+    //         // const depositReq: Partial<Request> = {
+    //         //   ...req,
+    //         //   user: currentUser, // Pass the original logged-in user (usually the parent or admin)
+    //         //   body: {
+    //         //     userId: newUser._id,
+    //         //     parentUserId: parentUser._id,
+    //         //     amount: sendamount,
+    //         //     narration: 'Initial deposit on signup',
+    //         //     balanceUpdateType: 'D',
+    //         //     // transactionPassword: '123456', // or pass it from signup body if needed
+    //         //   },
+    //         // }
+    //         // const depositRes: Partial<Response> = {
+    //         //   ...res,
+    //         //   status: () => res, // allow chaining like res.status().json()
+    //         //   json: () => res, // dummy implementation for json
+    //         // }
+    //      await axios.post("https://api.star-99.com/api/user-account-balance", { userId: newUser._id,
+    //           parentUserId: parentUser._id,
+    //           amount: sendamount,
+    //           narration: 'Initial deposit on signup',
+    //           balanceUpdateType: 'D',
+    //           transactionPassword: "123456"
+    //         },
+    //           {
+    //             headers: {
+    //               Authorization: req.headers.authorization || '', // Forward the same JWT token
+    //             },
+    //           }
+    //         ).then((ress)=>{
+    //           console.log(ress,"res for nwew depost api")
+    //           return this.success(res, {}, 'New User Added and Funded Successfully')
+    //         }).catch((err)=>{
+    //           console.log(err,"error in adding blance ")
+    //         })
+    //       // })
+    //   } catch (e: any) {
+    //     await session.abortTransaction()
+    //     session.endSession()
+    //     return this.fail(res, "server error: " + e.message)
+    //   }
+    // }
     signUp(req, res) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const session = yield Database_1.Database.getInstance().startSession();
             let changePassAndTxn = false;
             try {
                 session.startTransaction();
-                const { password, username, code, share, pshare, mcom, matcom, scom, sendamount, parent, partnership, role, fullname, city, phone, creditRefrences, exposerLimit, userSetting,
-                // transactionPassword,
-                 } = req.body;
-                console.log(req.body, "req body for code ");
+                const { password, username, code, share, pshare, mcom, matcom, scom, sendamount, parent, partnership, role, fullname, city, phone, creditRefrences, exposerLimit, userSetting, } = req.body;
+                console.log(req.body, "req body for code");
                 const currentUser = req.user;
-                const currentUserData = yield User_1.User.findOne({ _id: currentUser._id });
-                // return await currentUserData
-                //   .compareTxnPassword(transactionPassword)
-                //   .then(async (isMatch: any) => {
-                //     if (!isMatch) {
-                //       return this.fail(res, 'Transaction Password not matched')
-                //     }
+                const currentUserData = yield User_1.User.findOne({
+                    _id: currentUser._id,
+                });
+                /* ============================================================
+                   CHECK USERNAME
+                ============================================================ */
                 const user = yield User_1.User.findOne({ username });
                 if (user) {
-                    return this.fail(res, 'User already exixts!');
+                    yield session.abortTransaction();
+                    session.endSession();
+                    return this.fail(res, "User already exixts!");
                 }
-                if (share > pshare) {
-                    return this.fail(res, 'Share must be less than or equal to Parent Share');
+                /* ============================================================
+                   SHARE VALIDATION
+                ============================================================ */
+                if (Number(share) > Number(pshare)) {
+                    yield session.abortTransaction();
+                    session.endSession();
+                    return this.fail(res, "Share must be less than or equal to Parent Share");
                 }
-                const parentUser = yield User_1.User.findOne({ username: parent });
+                /* ============================================================
+                   GET ACTUAL PARENT
+                ============================================================ */
+                const parentUser = yield User_1.User.findOne({
+                    username: parent,
+                });
                 if (!parentUser) {
-                    return this.fail(res, 'Parent User not exixts!');
+                    yield session.abortTransaction();
+                    session.endSession();
+                    return this.fail(res, "Parent User not exixts!");
                 }
+                /* ============================================================
+                   EXPOSER LIMIT
+                   
+                   RULE:
+                   
+                   Super Admin (admin)
+                          ↓
+                   Sub Admin (sadmin)
+                          ↓
+                   Admin
+                          ↓
+                   Master
+                          ↓
+                   Agent
+                          ↓
+                   Client
+            
+                   ONLY admin -> sadmin:
+                   Request ki exposerLimit accept hogi.
+                   Default = 100000
+            
+                   Baaki sab:
+                   Parent ki DB wali exposerLimit inherit hogi.
+                ============================================================ */
+                let finalExposerLimit;
+                const isSuperAdminCreatingSubAdmin = parentUser.role === Role_1.RoleType.admin &&
+                    role === Role_1.RoleType.sadmin;
+                if (isSuperAdminCreatingSubAdmin) {
+                    /*
+                     * Sirf Super Admin -> Sub Admin case me
+                     * frontend se value lene deni hai.
+                     */
+                    finalExposerLimit =
+                        exposerLimit !== undefined &&
+                            exposerLimit !== null &&
+                            exposerLimit !== ""
+                            ? Number(exposerLimit)
+                            : 100000;
+                    /* ================= VALIDATION ================= */
+                    if (!Number.isFinite(finalExposerLimit) ||
+                        finalExposerLimit < 0) {
+                        yield session.abortTransaction();
+                        session.endSession();
+                        return this.fail(res, "Exposer Limit must be a valid positive number");
+                    }
+                }
+                else {
+                    /*
+                     * Baaki hierarchy me frontend value ignore.
+                     *
+                     * Actual Parent ki DB value pass hogi.
+                     */
+                    const parentExposerLimit = Number(parentUser === null || parentUser === void 0 ? void 0 : parentUser.exposerLimit);
+                    /*
+                     * Existing old parent accounts me exposerLimit
+                     * missing ho sakti hai.
+                     *
+                     * Isliye fallback 100000.
+                     */
+                    finalExposerLimit =
+                        Number.isFinite(parentExposerLimit) &&
+                            parentExposerLimit >= 0
+                            ? parentExposerLimit
+                            : 100000;
+                }
+                console.log({
+                    parent: parentUser.username,
+                    parentRole: parentUser.role,
+                    childRole: role,
+                    parentExposerLimit: parentUser.exposerLimit,
+                    requestedExposerLimit: exposerLimit,
+                    finalExposerLimit,
+                }, "EXPOSER LIMIT DATA");
+                /* ============================================================
+                   USER SETTINGS / PARTNERSHIP
+                ============================================================ */
                 let updatedUserSetting = {};
                 if (role !== Role_1.RoleType.user) {
                     changePassAndTxn = true;
-                    let errorMsg = this.validatePartnership(JSON.parse(JSON.stringify(parentUser)), partnership);
+                    const errorMsg = this.validatePartnership(JSON.parse(JSON.stringify(parentUser)), partnership);
                     if (errorMsg) {
+                        yield session.abortTransaction();
+                        session.endSession();
                         return this.fail(res, `${errorMsg.game} Partnership should be less then or equal ${errorMsg.parentRatio}`);
                     }
                     console.log(userSetting, parentUser.userSetting, "Lokesh bhaiii");
                     updatedUserSetting = this.getUserSetting(userSetting, parentUser.userSetting);
                     console.log(updatedUserSetting, "updated user setting");
                 }
+                /* ============================================================
+                   CLIENT USER SETTINGS
+                   
+                   IMPORTANT:
+                   Ab Client ke liye frontend exposerLimit required nahi.
+                   finalExposerLimit parent se already aa chuki hai.
+                ============================================================ */
                 if (role === Role_1.RoleType.user) {
-                    if (!exposerLimit)
-                        return this.fail(res, 'Exposer Limit is reuired field');
-                    // console.log(userSetting,parentUser.userSetting,"Lokesh")
                     updatedUserSetting = this.getUserSetting(userSetting, parentUser.userSetting);
-                    console.log(updatedUserSetting, "Lokesh");
+                    console.log(updatedUserSetting, "Client Updated User Setting");
                 }
+                /* ============================================================
+                   PARENT STRING
+                ============================================================ */
                 const newUserParentStr = (parentUser === null || parentUser === void 0 ? void 0 : parentUser.parentStr)
-                    ? [...parentUser === null || parentUser === void 0 ? void 0 : parentUser.parentStr, parentUser._id]
+                    ? [...parentUser.parentStr, parentUser._id]
                     : [parentUser._id];
-                // User Setting
+                /* ============================================================
+                   CREATE USER DATA
+                ============================================================ */
                 const userData = {
                     username: code,
                     share,
@@ -394,66 +668,115 @@ class DealersController extends ApiController_1.ApiController {
                     city: city,
                     phone: phone,
                     creditRefrences,
-                    exposerLimit,
+                    /*
+                     * IMPORTANT
+                     *
+                     * Direct req.body.exposerLimit nahi.
+                     * Backend-calculated final limit.
+                     */
+                    exposerLimit: finalExposerLimit,
                     changePassAndTxn,
                     userSetting: updatedUserSetting,
                 };
+                /* ============================================================
+                   SAVE USER
+                ============================================================ */
                 const newUser = new User_1.User(userData);
-                yield newUser.save({ session });
-                if (newUser._id !== undefined && newUser._id !== null) {
-                    yield Balance_1.Balance.findOneAndUpdate({ userId: newUser._id }, { balance: 0, exposer: 0, profitLoss: -creditRefrences, mainBalance: 0, commision: 0 }, { new: true, upsert: true, session });
+                yield newUser.save({
+                    session,
+                });
+                /* ============================================================
+                   CREATE BALANCE
+                ============================================================ */
+                if (newUser._id !== undefined &&
+                    newUser._id !== null) {
+                    yield Balance_1.Balance.findOneAndUpdate({
+                        userId: newUser._id,
+                    }, {
+                        balance: 0,
+                        exposer: 0,
+                        profitLoss: -creditRefrences,
+                        mainBalance: 0,
+                        commision: 0,
+                    }, {
+                        new: true,
+                        upsert: true,
+                        session,
+                    });
+                    /* ========================================================
+                       CREATE DEFAULT BET STAKE FOR CLIENT
+                    ======================================================== */
                     if (role === Role_1.RoleType.user) {
-                        // const parentStack: any = await UserBetStake.findOne({
-                        //   userId: parentUser._id,
-                        // }).lean()
-                        // delete parentStack._id
-                        // delete parentStack.userId
-                        yield UserBetStake_1.UserBetStake.findOneAndUpdate({ userId: newUser._id }, Object.assign({}, UserBetStake_1.defaultStack), { new: true, upsert: true, session });
+                        yield UserBetStake_1.UserBetStake.findOneAndUpdate({
+                            userId: newUser._id,
+                        }, Object.assign({}, UserBetStake_1.defaultStack), {
+                            new: true,
+                            upsert: true,
+                            session,
+                        });
                     }
                 }
-                if (newUser._id !== undefined && newUser._id !== null && role !== Role_1.RoleType.user) {
+                /* ============================================================
+                   PARTNERSHIP
+                ============================================================ */
+                if (newUser._id !== undefined &&
+                    newUser._id !== null &&
+                    role !== Role_1.RoleType.user) {
                     const partnershipData = this.partnership(partnership, parentUser.partnership, newUser._id);
-                    yield User_1.User.findOneAndUpdate({ _id: newUser._id }, { partnership: partnershipData }, { session });
+                    yield User_1.User.findOneAndUpdate({
+                        _id: newUser._id,
+                    }, {
+                        partnership: partnershipData,
+                    }, {
+                        session,
+                    });
                 }
+                /* ============================================================
+                   COMMIT USER CREATION
+                ============================================================ */
                 yield session.commitTransaction();
                 session.endSession();
-                // const depositReq: Partial<Request> = {
-                //   ...req,
-                //   user: currentUser, // Pass the original logged-in user (usually the parent or admin)
-                //   body: {
-                //     userId: newUser._id,
-                //     parentUserId: parentUser._id,
-                //     amount: sendamount,
-                //     narration: 'Initial deposit on signup',
-                //     balanceUpdateType: 'D',
-                //     // transactionPassword: '123456', // or pass it from signup body if needed
-                //   },
-                // }
-                // const depositRes: Partial<Response> = {
-                //   ...res,
-                //   status: () => res, // allow chaining like res.status().json()
-                //   json: () => res, // dummy implementation for json
-                // }
-                yield axios_1.default.post("https://api.star-99.com/api/user-account-balance", { userId: newUser._id,
-                    parentUserId: parentUser._id,
-                    amount: sendamount,
-                    narration: 'Initial deposit on signup',
-                    balanceUpdateType: 'D',
-                    transactionPassword: "123456"
-                }, {
-                    headers: {
-                        Authorization: req.headers.authorization || '', // Forward the same JWT token
-                    },
-                }).then((ress) => {
-                    console.log(ress, "res for nwew depost api");
-                    return this.success(res, {}, 'New User Added and Funded Successfully');
-                }).catch((err) => {
-                    console.log(err, "error in adding blance ");
-                });
-                // })
+                /* ============================================================
+                   INITIAL DEPOSIT
+                ============================================================ */
+                try {
+                    const ress = yield axios_1.default.post("https://api.star-99.com/api/user-account-balance", {
+                        userId: newUser._id,
+                        parentUserId: parentUser._id,
+                        amount: sendamount,
+                        narration: "Initial deposit on signup",
+                        balanceUpdateType: "D",
+                        transactionPassword: "123456",
+                    }, {
+                        headers: {
+                            Authorization: req.headers.authorization || "",
+                        },
+                    });
+                    console.log(ress.data, "res for new deposit api");
+                    return this.success(res, {}, "New User Added and Funded Successfully");
+                }
+                catch (err) {
+                    console.log(((_a = err === null || err === void 0 ? void 0 : err.response) === null || _a === void 0 ? void 0 : _a.data) || (err === null || err === void 0 ? void 0 : err.message) || err, "error in adding balance");
+                    /*
+                     * User DB me already create ho chuka hai,
+                     * kyunki transaction deposit API se pehle commit ho gayi.
+                     */
+                    return this.fail(res, "User created successfully but initial deposit failed");
+                }
             }
             catch (e) {
-                yield session.abortTransaction();
+                try {
+                    /*
+                     * Agar transaction already commit ho gayi ho
+                     * to abort nahi karna.
+                     */
+                    if (session.inTransaction()) {
+                        yield session.abortTransaction();
+                    }
+                }
+                catch (abortError) {
+                    console.log(abortError, "Transaction abort error");
+                }
                 session.endSession();
                 return this.fail(res, "server error: " + e.message);
             }
