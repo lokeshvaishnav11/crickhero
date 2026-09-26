@@ -24,6 +24,7 @@ const AccountStatement = () => {
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [betHistory, setBetHistory] = React.useState<any>({});
+
   const [selectedStmt, setSelectedStmt] = React.useState<AccoutStatement>(
     {} as AccoutStatement
   );
@@ -37,7 +38,9 @@ const AccountStatement = () => {
     reportType: "All",
   });
 
-  // 🔥 FORMAT FUNCTION
+  // =========================================================
+  // FORMAT FUNCTION
+  // =========================================================
   const dataformat = (
     response: any,
     baseBalance: number,
@@ -50,53 +53,92 @@ const AccountStatement = () => {
 
       return {
         _id: stmt._id,
+
         sr_no: startIndex + index + 1,
+
         date: moment(stmt.createdAt).format(dateFormat),
+
         credit: stmt.amount,
+
         debit: stmt.amount,
+
         closing: Number(closingbalance.toFixed(2)),
+
+        // Remark / Description
         narration: stmt.narration,
+
+        // From
+        txnBy: stmt.txnBy,
+
+        // Full original statement
         stmt: stmt,
       };
     });
   };
 
-  // 🔥 INITIAL DATE
+  // =========================================================
+  // INITIAL DATE
+  // =========================================================
   React.useEffect(() => {
     const filterObj = filterdata;
-    filterObj.startDate = moment().subtract(7, "days").format("YYYY-MM-DD");
+
+    filterObj.startDate = moment()
+      .subtract(7, "days")
+      .format("YYYY-MM-DD");
+
     filterObj.endDate = moment().format("YYYY-MM-DD");
-    setfilterdata({ ...filterObj });
+
+    setfilterdata({
+      ...filterObj,
+    });
 
     getAccountStmt(1);
   }, []);
 
-  // 🔥 MAIN API (FINAL FIX)
+  // =========================================================
+  // MAIN API
+  // =========================================================
   const getAccountStmt = async (pageNumber: number) => {
     try {
-      const res = await accountService.getAccountList(pageNumber, filterdata);
+      const res = await accountService.getAccountList(
+        pageNumber,
+        filterdata
+      );
 
       const items = res?.data?.data?.items || [];
-      const opening = res?.data?.data?.openingBalance || 0;
-      const total = res?.data?.data?.total || 0;
+
+      const opening =
+        res?.data?.data?.openingBalance || 0;
+
+      const total =
+        res?.data?.data?.total || 0;
 
       let baseBalance = opening;
 
-      // 🔥 PREVIOUS PAGES SUM
+      // =====================================================
+      // PREVIOUS PAGES SUM
+      // =====================================================
       if (pageNumber > 1) {
         let prevSum = 0;
 
         for (let i = 1; i < pageNumber; i++) {
-          const prevRes = await accountService.getAccountList(i, filterdata);
-          const prevItems = prevRes?.data?.data?.items || [];
+          const prevRes = await accountService.getAccountList(
+            i,
+            filterdata
+          );
+
+          const prevItems =
+            prevRes?.data?.data?.items || [];
 
           prevSum += prevItems.reduce(
-            (acc: number, curr: any) => acc + curr.amount,
+            (acc: number, curr: any) =>
+              acc + curr.amount,
             0
           );
         }
 
-        baseBalance = opening + prevSum;
+        baseBalance =
+          opening + prevSum;
       }
 
       setCurrentItems(
@@ -108,115 +150,308 @@ const AccountStatement = () => {
       );
 
       setOpenBalance(opening);
+
       setPage(pageNumber);
-      setPageCount(Math.ceil(total / itemsPerPage));
+
+      setPageCount(
+        Math.ceil(total / itemsPerPage)
+      );
     } catch (e: any) {
+      console.error(
+        "Account Statement Error:",
+        e
+      );
+
       toast.error("error");
     }
   };
 
-  // 🔥 PAGINATION
+  // =========================================================
+  // PAGINATION
+  // =========================================================
   const handlePageClick = (event: any) => {
-    const selectedPage = event.selected + 1;
+    const selectedPage =
+      event.selected + 1;
+
     getAccountStmt(selectedPage);
   };
 
+  // =========================================================
+  // FILTER CHANGE
+  // =========================================================
   const handleformchange = (event: any) => {
     const filterObj = filterdata;
-    filterObj[event.target.name] = event.target.value;
-    setfilterdata({ ...filterObj });
+
+    filterObj[event.target.name] =
+      event.target.value;
+
+    setfilterdata({
+      ...filterObj,
+    });
   };
 
+  // =========================================================
+  // SUBMIT
+  // =========================================================
   const handleSubmitform = (event: any) => {
     event.preventDefault();
+
     getAccountStmt(1);
   };
 
-  // 🔥 BET MODAL
+  // =========================================================
+  // BET MODAL PAGINATION
+  // =========================================================
   const handlePageClickBets = (event: any) => {
-    getBetsData(selectedStmt, event.selected + 1);
+    getBetsData(
+      selectedStmt,
+      event.selected + 1
+    );
   };
 
   React.useEffect(() => {
-    if (isOpen) getBetsData(selectedStmt, 1);
+    if (isOpen) {
+      getBetsData(
+        selectedStmt,
+        1
+      );
+    }
   }, [selectedStmt]);
 
-  const getBetsData = (stmt: AccoutStatement, pageNumber: number) => {
-    const betIds: any = stmt?.allBets?.map(({ betId }: any) => betId);
+  // =========================================================
+  // GET BET DATA
+  // =========================================================
+  const getBetsData = (
+    stmt: AccoutStatement,
+    pageNumber: number
+  ) => {
+    const betIds: any =
+      stmt?.allBets?.map(
+        ({ betId }: any) =>
+          betId
+      );
 
-    if (betIds && betIds.length > 0) {
+    if (
+      betIds &&
+      betIds.length > 0
+    ) {
       betService
-        .getBetListByIds(betIds, pageNumber)
-        .then((res: AxiosResponse) => {
-          setIsOpen(true);
-          setBetHistory(res.data.data);
-        });
+        .getBetListByIds(
+          betIds,
+          pageNumber
+        )
+        .then(
+          (res: AxiosResponse) => {
+            setIsOpen(true);
+
+            setBetHistory(
+              res.data.data
+            );
+          }
+        );
     }
   };
 
+  // =========================================================
+  // OPEN BET MODAL
+  // =========================================================
   const getBets = (
     e: MouseEvent<HTMLTableCellElement>,
     stmt: AccoutStatement
   ) => {
     e.preventDefault();
+
     setSelectedStmt(stmt);
+
     setIsOpen(true);
   };
 
-  // 🔥 TABLE
+  // =========================================================
+  // TABLE
+  //
+  // Description = narration / txnBy
+  //
+  // narration = Remark
+  // txnBy     = From
+  // =========================================================
   const getAcHtml = () => {
-    return currentItems.map((stmt: any, index: number) => {
-      return (
-        <tr key={`${stmt._id}${index}`}>
-          <td>{stmt.sr_no}</td>
-          <td className="wnwrap">{stmt.date}</td>
+    return currentItems.map(
+      (stmt: any, index: number) => {
+        // ================================
+        // REMARK / NARRATION
+        // ================================
+        const remark =
+          stmt?.narration !== undefined &&
+          stmt?.narration !== null
+            ? String(
+                stmt.narration
+              ).trim()
+            : "";
 
-          <td>{stmt.narration}</td>
+        // ================================
+        // FROM / TXN BY
+        // ================================
+        const from =
+          stmt?.txnBy !== undefined &&
+          stmt?.txnBy !== null
+            ? String(
+                stmt.txnBy
+              ).trim()
+            : "";
 
-          {/* PREVIOUS BAL */}
-          <td>{(stmt.closing - stmt.credit).toFixed(2)}</td>
+        // ================================
+        // DESCRIPTION = REMARK / FROM
+        //
+        // Example:
+        // Deposit Chips / ADMIN01
+        // ================================
+        const description =
+          [remark, from]
+            .filter(
+              (value) =>
+                value !== ""
+            )
+            .join(" / ");
 
-          <td className="green">
-            {stmt.credit >= 0 && stmt.credit.toFixed(2)}
-          </td>
+        return (
+          <tr
+            key={`${stmt._id}${index}`}
+          >
+            {/* SR NO */}
+            <td>
+              {stmt.sr_no}
+            </td>
 
-          <td className="red">
-            {stmt.credit < 0 && stmt.credit.toFixed(2)}
-          </td>
+            {/* DATE */}
+            <td className="wnwrap">
+              {stmt.date}
+            </td>
 
-          <td className="green">{stmt.closing.toFixed(2)}</td>
+            {/* ================================= */}
+            {/* DESCRIPTION = REMARK / FROM */}
+            {/* ================================= */}
+            <td>
+              {description || "-"}
+            </td>
 
-          <td onClick={(e) => getBets(e, stmt.stmt)}>
-            <span className="label-buttonccc">View Bets</span>
-          </td>
-        </tr>
-      );
-    });
+            {/* PREVIOUS BALANCE */}
+            <td>
+              {(
+                stmt.closing -
+                stmt.credit
+              ).toFixed(2)}
+            </td>
+
+            {/* CREDIT */}
+            <td className="green">
+              {stmt.credit >= 0 &&
+                stmt.credit.toFixed(
+                  2
+                )}
+            </td>
+
+            {/* DEBIT */}
+            <td className="red">
+              {stmt.credit < 0 &&
+                stmt.credit.toFixed(
+                  2
+                )}
+            </td>
+
+            {/* BALANCE */}
+            <td className="green">
+              {stmt.closing.toFixed(
+                2
+              )}
+            </td>
+
+            {/* BETS */}
+            <td
+              onClick={(e) =>
+                getBets(
+                  e,
+                  stmt.stmt
+                )
+              }
+            >
+              <span className="label-buttonccc">
+                View Bets
+              </span>
+            </td>
+          </tr>
+        );
+      }
+    );
   };
 
+  // =========================================================
+  // UI
+  // =========================================================
   return (
     <>
-      <div className={!isMobile ? " mt-1" : "padding-custom"}>
+      <div
+        className={
+          !isMobile
+            ? " mt-1"
+            : "padding-custom"
+        }
+      >
         <div className="body-wrap">
+
+          {/* =============================================== */}
+          {/* TABLE */}
+          {/* =============================================== */}
+
           <div className="table-responsive">
-            <table className="text-center" id="customers1">
+            <table
+              className="text-center"
+              id="customers1"
+            >
               <thead>
                 <tr>
-                  <th>Sr No.</th>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Prev Bal</th>
-                  <th>Credit</th>
-                  <th>Debit</th>
-                  <th>Balance</th>
-                  <th>Bets</th>
+                  <th>
+                    Sr No.
+                  </th>
+
+                  <th>
+                    Date
+                  </th>
+
+                  <th>
+                    Description
+                  </th>
+
+                  <th>
+                    Prev Bal
+                  </th>
+
+                  <th>
+                    Credit
+                  </th>
+
+                  <th>
+                    Debit
+                  </th>
+
+                  <th>
+                    Balance
+                  </th>
+
+                  <th>
+                    Bets
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {currentItems.length === 0 ? (
+                {currentItems.length ===
+                0 ? (
                   <tr>
-                    <td colSpan={8}>No Result Found</td>
+                    <td
+                      colSpan={8}
+                    >
+                      No Result Found
+                    </td>
                   </tr>
                 ) : (
                   getAcHtml()
@@ -225,31 +460,63 @@ const AccountStatement = () => {
             </table>
           </div>
 
-          {/* 🔥 PAGINATION */}
+          {/* =============================================== */}
+          {/* PAGINATION */}
+          {/* =============================================== */}
+
           <ReactPaginate
             breakLabel="..."
             nextLabel="Next"
-            onPageChange={handlePageClick}
-            pageRangeDisplayed={5}
-            pageCount={pageCount}
-            containerClassName={"pagination"}
-            activeClassName={"active"}
-            previousLabel={"Prev"}
+            onPageChange={
+              handlePageClick
+            }
+            pageRangeDisplayed={
+              5
+            }
+            pageCount={
+              pageCount
+            }
+            containerClassName={
+              "pagination"
+            }
+            activeClassName={
+              "active"
+            }
+            previousLabel={
+              "Prev"
+            }
           />
+
         </div>
       </div>
 
-      {/* 🔥 BET MODAL */}
+      {/* ================================================= */}
+      {/* BET MODAL */}
+      {/* ================================================= */}
+
       <ReactModal
         isOpen={isOpen}
-        onRequestClose={() => setIsOpen(false)}
-        className={"col-md-12"}
+        onRequestClose={() =>
+          setIsOpen(false)
+        }
+        className={
+          "col-md-12"
+        }
         ariaHideApp={false}
       >
         <div className="modal-content">
+
           <div className="modal-header">
-            <h5>Bets</h5>
-            <button onClick={() => setIsOpen(false)} className="close">
+            <h5>
+              Bets
+            </h5>
+
+            <button
+              onClick={() =>
+                setIsOpen(false)
+              }
+              className="close"
+            >
               ✖
             </button>
           </div>
@@ -257,13 +524,22 @@ const AccountStatement = () => {
           <div className="modal-body">
             {!loadingState && (
               <BetListComponent
-                bethistory={betHistory}
-                handlePageClick={handlePageClickBets}
-                page={page}
-                isTrash={false}
+                bethistory={
+                  betHistory
+                }
+                handlePageClick={
+                  handlePageClickBets
+                }
+                page={
+                  page
+                }
+                isTrash={
+                  false
+                }
               />
             )}
           </div>
+
         </div>
       </ReactModal>
     </>
