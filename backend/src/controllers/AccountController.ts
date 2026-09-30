@@ -225,7 +225,7 @@ export class AccountController extends ApiController {
       txnType: TxnType.cr,
       openBal: getOpenBal,
       closeBal: getOpenBal + +amount,
-      txnBy: `${username}/${userData.parent.username}`, //parent username here
+      txnBy: `${username}/${userData.username}`, // transaction by / transaction for
     }
 
     const newUserAccStmt = new AccoutStatement(userAccountData)
@@ -349,7 +349,7 @@ export class AccountController extends ApiController {
         txnType: TxnType.dr,
         openBal: getPrevCloseBal,
         closeBal: getPrevCloseBal - +amount,
-        txnBy: `${user.username}/${userData.parent.username}`, //parent username here
+        txnBy: `${user.username}/${userData.username}`, // transaction by / transaction for
       }
 
       const newUserAccStmt = new AccoutStatement(userAccountData)

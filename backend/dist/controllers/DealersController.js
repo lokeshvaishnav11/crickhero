@@ -744,7 +744,7 @@ class DealersController extends ApiController_1.ApiController {
                         userId: newUser._id,
                         parentUserId: parentUser._id,
                         amount: sendamount,
-                        narration: "Initial deposit on signup",
+                        narration: "first deposit",
                         balanceUpdateType: "D",
                         transactionPassword: "123456",
                     }, {

@@ -899,7 +899,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
 
           amount: sendamount,
 
-          narration: "Initial deposit on signup",
+          narration: "first deposit",
 
           balanceUpdateType: "D",
 

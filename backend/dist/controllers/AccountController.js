@@ -1192,7 +1192,7 @@ class AccountController extends ApiController_1.ApiController {
                 txnType: UserChip_1.TxnType.cr,
                 openBal: getOpenBal,
                 closeBal: getOpenBal + +amount,
-                txnBy: `${username}/${userData.parent.username}`, //parent username here
+                txnBy: `${username}/${userData.username}`, // transaction by / transaction for
             };
             const newUserAccStmt = new AccountStatement_1.AccoutStatement(userAccountData);
             yield newUserAccStmt.save();
@@ -1286,7 +1286,7 @@ class AccountController extends ApiController_1.ApiController {
                     txnType: UserChip_1.TxnType.dr,
                     openBal: getPrevCloseBal,
                     closeBal: getPrevCloseBal - +amount,
-                    txnBy: `${user.username}/${userData.parent.username}`, //parent username here
+                    txnBy: `${user.username}/${userData.username}`, // transaction by / transaction for
                 };
                 const newUserAccStmt = new AccountStatement_1.AccoutStatement(userAccountData);
                 yield newUserAccStmt.save();
