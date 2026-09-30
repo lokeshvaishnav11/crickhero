@@ -2,8 +2,7 @@
 const PaymentQRCode = ({ upiId, name, amount, transactionId } : any) => {
     // Construct the UPI payment URL
     const upiString = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&tn=${transactionId}&cu=INR`;
-    const upi2 = `upi://pay?pa=rudhamsoftware@ibl&pn=318157&cu=INR&tn=Pay+to+318157&am=11&mc=4900&mode=04
-&tr=EZV2024110120202019874354&td=EZV2024110120202019874354`
+    const upi2 = ``
     // Encode the UPI string
     const encodedUPI = encodeURIComponent(upi2);
 
