@@ -107,8 +107,19 @@ const Main = () => {
 
       <Header />
       
-      <ToastContainer hideProgressBar={true} autoClose={1000} />
-      <div className="main">
+x  <ToastContainer
+  position="top-right"
+  autoClose={500}
+  hideProgressBar={true}
+  newestOnTop={true}
+  // closeOnClick
+  rtl={false}
+  pauseOnFocusLoss={false}
+  draggable
+  pauseOnHover={false}
+  theme="colored"
+  limit={3}
+/>      <div className="main">
         {!isMobile && (
           <div className="container-fluid ">
             <div className="">

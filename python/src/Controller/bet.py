@@ -2210,9 +2210,10 @@ def placebet(betObj, userInfo):
             if (bet_On != BetOn['CASINO']):
                 exposerone = getexposerfunctionone(userInfo, False, jsonObj,matchInfo)
                 if(exposerone == "mafailed"):
-                    return error ({},"your one match Limit completed")
+                     return json.dumps(error({}, "Your One Match Limit completed"), cls=JSONEncoderWithObjectId)
                 if(exposerone == "ffailed"):
-                    return error ({},"your one Session Limit completed")
+                    return json.dumps(error({}, "your one Session Limit completed"), cls=JSONEncoderWithObjectId)
+
                 exposer = getexposerfunction(userInfo, False, jsonObj)
                 print("exposer")
                 print(exposer)
