@@ -1272,10 +1272,12 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
       as: 'balance',
     },
   },
-  {
-    $unwind: '$balance',
+ {
+  $unwind: {
+    path: '$balance',
     preserveNullAndEmptyArrays: true,
   },
+},
   {
     $lookup: {
       from: 'users',
