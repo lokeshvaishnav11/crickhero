@@ -1321,25 +1321,25 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
 
     let filters: any = []
 
-    if (username && search == '') {
+    if (username == "superadmin" || username == "superadmin2" && search == '') {
       const user: IUserModel | null = await this.getUser(username)
     
       if (!user) {
         return res.status(404).json({ message: 'User not found' })
       }
     
-      filters = paginationPipeLine(
-        pageNo,
-        [
-          {
-            $match: {
-              parentStr: { $elemMatch: { $eq: Types.ObjectId(user._id) } }
-            }
-          },
-          ...aggregateFilter,
-        ],
-        pageLimit,
-      )
+     filters = paginationPipeLine(
+    pageNo,
+    [
+      {
+        $match: {
+          _id: Types.ObjectId(user._id)
+        }
+      },
+      ...aggregateFilter,
+    ],
+    pageLimit,
+  );
     }else if (search === 'true' && type) {
       //if (username) const user: IUserModel | null = await this.getUser(username)
       filters = paginationPipeLine(
