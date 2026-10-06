@@ -2644,150 +2644,594 @@ const { userIds }: any = req.body;
       return this.fail(res, e);
     }
   };
-  declaremarketresult = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      const { selectionId, matchId, marketId }: any = req.query;
-      const userbet: any = await Bet.aggregate([
-        {
-          $match: {
-            status: "pending",
-            bet_on: BetOn.MATCH_ODDS,
-            matchId: parseInt(matchId),
-            marketId: marketId,
-          },
-        },
-        {
-          $group: {
-            _id: "$userId",
-            allBets: { $push: "$$ROOT" },
-          },
-        },
-      ]);
-      let userIdList: any = [];
-      const parentIdList: any = [];
-      const declare_result = userbet.map(async (Item: any) => {
-        let allbets: any = Item.allBets;
-        const settle_single = allbets.map(
-          async (ItemBetList: any, indexBetList: number) => {
-            let profit_type: string = "loss";
-            if (parseInt(selectionId) == ItemBetList.selectionId) {
-              profit_type = ItemBetList.isBack == true ? "profit" : profit_type;
-            } else {
-              profit_type = ItemBetList.isBack == true ? profit_type : "profit";
-            }
-            let profitLossAmt: number = 0;
-            if (ItemBetList.isBack) {
-              if (profit_type == "profit") {
-                profitLossAmt =
-                  (parseFloat(ItemBetList.odds.toString()) - 1) *
-                  parseFloat(ItemBetList.stack.toString());
-              } else if (profit_type == "loss") {
-                profitLossAmt = parseFloat(ItemBetList.loss.toString());
-              }
-            } else {
-              if (profit_type == "profit") {
-                profitLossAmt = ItemBetList.stack;
-              } else if (profit_type == "loss") {
-                profitLossAmt = parseFloat(ItemBetList.loss.toString());
-              }
-            }
-            if (selectionId == -1) {
-              profitLossAmt = 0;
-            }
+  // declaremarketresult = async (
+  //   req: Request,
+  //   res: Response
+  // ): Promise<Response> => {
+  //   try {
+  //     const { selectionId, matchId, marketId }: any = req.query;
+  //     const userbet: any = await Bet.aggregate([
+  //       {
+  //         $match: {
+  //           status: "pending",
+  //           bet_on: BetOn.MATCH_ODDS,
+  //           matchId: parseInt(matchId),
+  //           marketId: marketId,
+  //         },
+  //       },
+  //       {
+  //         $group: {
+  //           _id: "$userId",
+  //           allBets: { $push: "$$ROOT" },
+  //         },
+  //       },
+  //     ]);
+  //     let userIdList: any = [];
+  //     const parentIdList: any = [];
+  //     const declare_result = userbet.map(async (Item: any) => {
+  //       let allbets: any = Item.allBets;
+  //       const settle_single = allbets.map(
+  //         async (ItemBetList: any, indexBetList: number) => {
+  //           let profit_type: string = "loss";
+  //           if (parseInt(selectionId) == ItemBetList.selectionId) {
+  //             profit_type = ItemBetList.isBack == true ? "profit" : profit_type;
+  //           } else {
+  //             profit_type = ItemBetList.isBack == true ? profit_type : "profit";
+  //           }
+  //           let profitLossAmt: number = 0;
+  //           if (ItemBetList.isBack) {
+  //             if (profit_type == "profit") {
+  //               profitLossAmt =
+  //                 (parseFloat(ItemBetList.odds.toString()) - 1) *
+  //                 parseFloat(ItemBetList.stack.toString());
+  //             } else if (profit_type == "loss") {
+  //               profitLossAmt = parseFloat(ItemBetList.loss.toString());
+  //             }
+  //           } else {
+  //             if (profit_type == "profit") {
+  //               profitLossAmt = ItemBetList.stack;
+  //             } else if (profit_type == "loss") {
+  //               profitLossAmt = parseFloat(ItemBetList.loss.toString());
+  //             }
+  //           }
+  //           if (selectionId == -1) {
+  //             profitLossAmt = 0;
+  //           }
 
-            let type_string: string = ItemBetList.isBack ? "Back" : "Lay";
-            let narration: string =
-              ItemBetList.matchName +
-              " / " +
-              ItemBetList.selectionName +
-              " / " +
-              type_string +
-              " / " +
-              (selectionId == -1 ? "Abandoned" : selectionId);
-            await this.addprofitlosstouser({
-              userId: ObjectId(Item._id),
-              bet_id: ObjectId(ItemBetList._id),
-              profit_loss: profitLossAmt,
-              matchId,
-              narration,
-              sportsType: ItemBetList.sportId,
-              selectionId: ItemBetList.selectionId,
-              sportId: ItemBetList.sportId,
-            });
-             await this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, BetOn.MATCH_ODDS)
+  //           let type_string: string = ItemBetList.isBack ? "Back" : "Lay";
+  //           let narration: string =
+  //             ItemBetList.matchName +
+  //             " / " +
+  //             ItemBetList.selectionName +
+  //             " / " +
+  //             type_string +
+  //             " / " +
+  //             (selectionId == -1 ? "Abandoned" : selectionId);
+  //           await this.addprofitlosstouser({
+  //             userId: ObjectId(Item._id),
+  //             bet_id: ObjectId(ItemBetList._id),
+  //             profit_loss: profitLossAmt,
+  //             matchId,
+  //             narration,
+  //             sportsType: ItemBetList.sportId,
+  //             selectionId: ItemBetList.selectionId,
+  //             sportId: ItemBetList.sportId,
+  //           });
+  //            await this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, BetOn.MATCH_ODDS)
 
-            if (indexBetList == 0) {
-              ItemBetList.ratioStr.allRatio.map((ItemParentStr: any) => {
-                parentIdList.push(ItemParentStr.parent);
-                userIdList.push(ObjectId(ItemParentStr.parent));
-              });
-            }
-          }
-        );
-        await Promise.all(settle_single);
-        userIdList.push(ObjectId(Item._id));
-      });
+  //           if (indexBetList == 0) {
+  //             ItemBetList.ratioStr.allRatio.map((ItemParentStr: any) => {
+  //               parentIdList.push(ItemParentStr.parent);
+  //               userIdList.push(ObjectId(ItemParentStr.parent));
+  //             });
+  //           }
+  //         }
+  //       );
+  //       await Promise.all(settle_single);
+  //       userIdList.push(ObjectId(Item._id));
+  //     });
 
-      await Promise.all(declare_result);
+  //     await Promise.all(declare_result);
 
-      await Bet.updateMany(
-        {
-          userId: { $in: userIdList },
-          matchId: matchId,
+  //     await Bet.updateMany(
+  //       {
+  //         userId: { $in: userIdList },
+  //         matchId: matchId,
+  //         bet_on: BetOn.MATCH_ODDS,
+  //         marketId: marketId,
+  //       },
+  //       { $set: { status: "completed" } }
+  //     );
+  //     // const unique = [...new Set(userIdList)];
+  //     const unique = [...new Set(userIdList.map(id => id.toString()))].map(id => ObjectId(id));
+
+  //     if (unique.length > 0) {
+  //       // const ObjectId = require("mongoose").Types.ObjectId;
+
+  //       const userProfits = await Promise.all(unique.map(async (userId) => {
+  //         const bets = await Bet.find({
+  //           userId: ObjectId(userId),
+  //           status: "completed",
+  //           marketId: marketId,
+  //           bet_on: BetOn.MATCH_ODDS
+  //         });
+
+  //         const totalProfitLoss = bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
+
+  //         // return {
+  //         //   userId,
+  //         //   totalProfitLoss
+  //         // };
+  //         if (bets.length > 0) {
+  //           // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
+  //         }
+  //       }));
+
+  //       // Optional: log or use the result
+  //       console.log(userProfits);
+
+  //       // Continue with your logic
+  //     }
+  //     if (unique.length > 0) {
+  //       await this.updateUserAccountStatement(unique, parentIdList);
+  //     }
+  //     await Match.updateOne(
+  //       { matchId: parseInt(matchId) },
+  //       { $set: { result_delare: true, result: selectionId } }
+  //     );
+  //     await Market.updateOne(
+  //       { marketId: marketId, matchId: parseInt(matchId) },
+  //       { $set: { resultDelcare: "yes", result: selectionId } }
+  //     );
+  //     return this.success(res, userbet, "");
+  //   } catch (e: any) {
+  //     return this.fail(res, e);
+  //   }
+  // };
+
+
+// ============================================================
+// SUPER ADMIN CONFIG
+// ============================================================
+
+// Yahan actual ObjectIds daal dena
+ PER_BET_SUPER_ADMIN_ID :any = "63382d9bfbb3a573110c1ba5";
+ TOTAL_SUPER_ADMIN_ID :any = "6ac4bd548a6582f880d3b100";
+
+
+declaremarketresult = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { selectionId, matchId, marketId }: any = req.query;
+
+    const userbet: any = await Bet.aggregate([
+      {
+        $match: {
+          status: "pending",
           bet_on: BetOn.MATCH_ODDS,
+          matchId: parseInt(matchId),
           marketId: marketId,
         },
-        { $set: { status: "completed" } }
-      );
-      // const unique = [...new Set(userIdList)];
-      const unique = [...new Set(userIdList.map(id => id.toString()))].map(id => ObjectId(id));
+      },
+      {
+        $group: {
+          _id: "$userId",
+          allBets: { $push: "$$ROOT" },
+        },
+      },
+    ]);
 
-      if (unique.length > 0) {
-        // const ObjectId = require("mongoose").Types.ObjectId;
+    let userIdList: any = [];
+    const parentIdList: any = [];
 
-        const userProfits = await Promise.all(unique.map(async (userId) => {
-          const bets = await Bet.find({
-            userId: ObjectId(userId),
-            status: "completed",
-            marketId: marketId,
-            bet_on: BetOn.MATCH_ODDS
+    const declare_result = userbet.map(async (Item: any) => {
+
+      const allbets: any = Item.allBets;
+
+      // ======================================================
+      // CHECK USER TREE
+      // ======================================================
+
+      const firstBet = allbets?.[0];
+
+      const hierarchyIds = [
+        ...(firstBet?.parentStr || []).map(
+          (id: any) => id.toString()
+        ),
+
+        ...(firstBet?.ratioStr?.allRatio || []).map(
+          (item: any) => item.parent?.toString()
+        ),
+      ];
+
+      const isPerBetUser =
+        hierarchyIds.includes(this.PER_BET_SUPER_ADMIN_ID);
+
+      const isTotalUser =
+        hierarchyIds.includes(this.TOTAL_SUPER_ADMIN_ID);
+
+
+      // ======================================================
+      // TOTAL MODE KE LIYE CURRENT MARKET P/L
+      // ======================================================
+
+      let totalProfitLoss = 0;
+
+      let totalNarration = "";
+
+      let totalBetId: any = null;
+
+
+      const settle_single = allbets.map(
+        async (ItemBetList: any, indexBetList: number) => {
+
+          let profit_type: string = "loss";
+
+
+          // ==================================================
+          // PROFIT / LOSS TYPE
+          // ==================================================
+
+          if (
+            parseInt(selectionId) ==
+            ItemBetList.selectionId
+          ) {
+
+            profit_type =
+              ItemBetList.isBack == true
+                ? "profit"
+                : profit_type;
+
+          } else {
+
+            profit_type =
+              ItemBetList.isBack == true
+                ? profit_type
+                : "profit";
+          }
+
+
+          // ==================================================
+          // PROFIT / LOSS AMOUNT
+          // ==================================================
+
+          let profitLossAmt: number = 0;
+
+          if (ItemBetList.isBack) {
+
+            if (profit_type == "profit") {
+
+              profitLossAmt =
+                (
+                  parseFloat(
+                    ItemBetList.odds.toString()
+                  ) - 1
+                ) *
+                parseFloat(
+                  ItemBetList.stack.toString()
+                );
+
+            } else if (
+              profit_type == "loss"
+            ) {
+
+              profitLossAmt =
+                parseFloat(
+                  ItemBetList.loss.toString()
+                );
+            }
+
+          } else {
+
+            if (profit_type == "profit") {
+
+              profitLossAmt =
+                ItemBetList.stack;
+
+            } else if (
+              profit_type == "loss"
+            ) {
+
+              profitLossAmt =
+                parseFloat(
+                  ItemBetList.loss.toString()
+                );
+            }
+          }
+
+
+          // ==================================================
+          // ABANDONED
+          // ==================================================
+
+          if (selectionId == -1) {
+            profitLossAmt = 0;
+          }
+
+
+          // ==================================================
+          // NARRATION
+          // ==================================================
+
+          let type_string: string =
+            ItemBetList.isBack
+              ? "Back"
+              : "Lay";
+
+          let narration: string =
+            ItemBetList.matchName +
+            " / " +
+            ItemBetList.selectionName +
+            " / " +
+            type_string +
+            " / " +
+            (
+              selectionId == -1
+                ? "Abandoned"
+                : selectionId
+            );
+
+
+          // ==================================================
+          // NORMAL USER P/L
+          // ==================================================
+
+          await this.addprofitlosstouser({
+            userId: ObjectId(Item._id),
+
+            bet_id:
+              ObjectId(ItemBetList._id),
+
+            profit_loss:
+              profitLossAmt,
+
+            matchId,
+
+            narration,
+
+            sportsType:
+              ItemBetList.sportId,
+
+            selectionId:
+              ItemBetList.selectionId,
+
+            sportId:
+              ItemBetList.sportId,
           });
 
-          const totalProfitLoss = bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
 
-          // return {
-          //   userId,
-          //   totalProfitLoss
-          // };
-          if (bets.length > 0) {
-            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
+          // ==================================================
+          // PER BET SUPERADMIN
+          //
+          // HAR BET PAR cal9xbro()
+          // ==================================================
+
+          if (isPerBetUser) {
+
+            await this.cal9xbro(
+              Item._id,
+              profitLossAmt,
+              narration,
+              matchId,
+              ItemBetList._id,
+              BetOn.MATCH_ODDS
+            );
+
           }
-        }));
 
-        // Optional: log or use the result
-        console.log(userProfits);
 
-        // Continue with your logic
-      }
-      if (unique.length > 0) {
-        await this.updateUserAccountStatement(unique, parentIdList);
-      }
-      await Match.updateOne(
-        { matchId: parseInt(matchId) },
-        { $set: { result_delare: true, result: selectionId } }
+          // ==================================================
+          // TOTAL SUPERADMIN
+          //
+          // ABHI cal9xbro NAHI CHALEGA.
+          // SIRF P/L ADD KARO.
+          // ==================================================
+
+          if (isTotalUser) {
+
+            totalProfitLoss +=
+              Number(profitLossAmt);
+
+            if (!totalBetId) {
+              totalBetId =
+                ItemBetList._id;
+            }
+
+            if (!totalNarration) {
+
+              totalNarration =
+                ItemBetList.matchName +
+                " / " +
+                ItemBetList.marketName;
+
+            }
+
+          }
+
+
+          // ==================================================
+          // PARENT IDs
+          // ==================================================
+
+          if (indexBetList == 0) {
+
+            ItemBetList.ratioStr.allRatio.map(
+              (ItemParentStr: any) => {
+
+                parentIdList.push(
+                  ItemParentStr.parent
+                );
+
+                userIdList.push(
+                  ObjectId(
+                    ItemParentStr.parent
+                  )
+                );
+
+              }
+            );
+
+          }
+
+        }
       );
-      await Market.updateOne(
-        { marketId: marketId, matchId: parseInt(matchId) },
-        { $set: { resultDelcare: "yes", result: selectionId } }
+
+
+      await Promise.all(settle_single);
+
+
+      // ======================================================
+      // TOTAL SUPERADMIN
+      //
+      // ALL BETS COMPLETE HONE KE BAAD SIRF EK BAAR
+      // ======================================================
+
+      if (
+        isTotalUser &&
+        totalBetId
+      ) {
+
+        await this.cal9xbro(
+          Item._id,
+          totalProfitLoss,
+          totalNarration,
+          matchId,
+          totalBetId,
+          BetOn.MATCH_ODDS,
+        );
+
+      }
+
+
+      userIdList.push(
+        ObjectId(Item._id)
       );
-      return this.success(res, userbet, "");
-    } catch (e: any) {
-      return this.fail(res, e);
+
+    });
+
+
+    await Promise.all(declare_result);
+
+
+    // ========================================================
+    // COMPLETE BETS
+    // ========================================================
+
+    await Bet.updateMany(
+      {
+        userId: {
+          $in: userIdList
+        },
+
+        matchId: matchId,
+
+        bet_on:
+          BetOn.MATCH_ODDS,
+
+        marketId: marketId,
+      },
+
+      {
+        $set: {
+          status: "completed"
+        }
+      }
+    );
+
+
+    // ========================================================
+    // UNIQUE USERS
+    // ========================================================
+
+    const unique = [
+      ...new Set(
+        userIdList.map(
+          (id: any) =>
+            id.toString()
+        )
+      )
+    ].map(
+      (id: any) =>
+        ObjectId(id)
+    );
+
+
+    // ========================================================
+    // ACCOUNT STATEMENT
+    // ========================================================
+
+    if (unique.length > 0) {
+
+      await this.updateUserAccountStatement(
+        unique,
+        parentIdList
+      );
+
     }
-  };
+
+
+    // ========================================================
+    // MATCH RESULT
+    // ========================================================
+
+    await Match.updateOne(
+      {
+        matchId:
+          parseInt(matchId)
+      },
+
+      {
+        $set: {
+          result_delare: true,
+          result: selectionId
+        }
+      }
+    );
+
+
+    // ========================================================
+    // MARKET RESULT
+    // ========================================================
+
+    await Market.updateOne(
+      {
+        marketId: marketId,
+
+        matchId:
+          parseInt(matchId)
+      },
+
+      {
+        $set: {
+          resultDelcare: "yes",
+          result: selectionId
+        }
+      }
+    );
+
+
+    return this.success(
+      res,
+      userbet,
+      ""
+    );
+
+  } catch (e: any) {
+
+    return this.fail(
+      res,
+      e
+    );
+
+  }
+};
+
+
+
+
+
 
   declaremarketresultAuto = async (
     req: Request,
@@ -4232,7 +4676,8 @@ const { userIds }: any = req.body;
     narration,
     matchId,
     bet_id: any,
-    bet_on
+    bet_on,
+
 
   ) {
     try {
