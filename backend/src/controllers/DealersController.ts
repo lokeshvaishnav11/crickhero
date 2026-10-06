@@ -1321,7 +1321,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
 
     let filters: any = []
 
-    if (username == "superadmin" || username == "superadmin2" && search == '') {
+    if (username  && search == '') {
       const user: IUserModel | null = await this.getUser(username)
     
       if (!user) {
