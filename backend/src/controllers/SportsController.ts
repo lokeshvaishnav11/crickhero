@@ -1510,7 +1510,7 @@ async getFancyList(req: Request, res: Response): Promise<Response> {
       const matchIds = alreadyAdded.map((match: any) => match.matchId)
 
       const response = await axios.get(
-        "https://docs.vkmster.com/sportapi/match-list?sportsid=4",
+        "http://64.227.139.183:3088/sportapi/match-list?sportsid=4",
         {
           headers: {
             "x-api-key": "a3f41cc1eff0e0609f70b738d9e9d6cfda7b7465",
