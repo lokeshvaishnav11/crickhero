@@ -573,7 +573,47 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
 
       return this.fail(res, "Parent User not exixts!");
     }
+        /* ============================================================
+       MATCH COMMISSION VALIDATION
 
+       SuperAdmin 1:
+       63382d9bfbb3a573110c1ba5
+       Khud + poori child hierarchy => MAX 1.5
+
+       Baaki SuperAdmin/tree => MAX 2
+    ============================================================ */
+
+    const SUPERADMIN_1_ID = "63382d9bfbb3a573110c1ba5";
+
+    // Actual parent ki complete hierarchy ko string me convert karo
+    const parentHierarchyIds = (parentUser?.parentStr || []).map(
+      (id: any) => id?.toString()
+    );
+
+    // Parent khud first SuperAdmin hai YA uske parentStr me first SuperAdmin hai
+    const isSuperAdmin1Tree =
+      parentUser?._id?.toString() === SUPERADMIN_1_ID ||
+      parentHierarchyIds.includes(SUPERADMIN_1_ID);
+
+    // First SuperAdmin tree = 1.5
+    // Baaki tree = 2
+    const maxMatchCommission = isSuperAdmin1Tree ? 1.5 : 2;
+
+    const requestedMatchCommission = Number(mcom);
+
+    if (
+      !Number.isFinite(requestedMatchCommission) ||
+      requestedMatchCommission < 0 ||
+      requestedMatchCommission > maxMatchCommission
+    ) {
+      await session.abortTransaction();
+      session.endSession();
+
+      return this.fail(
+        res,
+        `Match commission must be between 0 and ${maxMatchCommission}`
+      );
+    }
     /* ============================================================
        EXPOSER LIMIT
        
