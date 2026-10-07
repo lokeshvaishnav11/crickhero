@@ -512,6 +512,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
       mcom,
       matcom,
       scom,
+      cascom,
       sendamount,
       parent,
       partnership,
@@ -614,6 +615,8 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
         `Match commission must be between 0 and ${maxMatchCommission}`
       );
     }
+
+    
     /* ============================================================
        EXPOSER LIMIT
        
@@ -792,7 +795,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
       mcom,
       matcom,
       scom,
-
+      cascom,
       code: username,
 
       password,
@@ -1226,6 +1229,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
       pshare: 1,
       mcom: 1,
       matcom: 1,
+      cascom: 1,
       matkalimit: 1,
       scom: 1,
       cacom:1,

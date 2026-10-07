@@ -347,7 +347,7 @@ class SportsController extends ApiController_1.ApiController {
                 const alreadyAdded = yield Match_1.Match.find({ active: true }, { matchId: 1 });
                 console.log(alreadyAdded, "Hello  World");
                 const matchIds = alreadyAdded.map((match) => match.matchId);
-                const response = yield axios_1.default.get("https://docs.vkmster.com/sportapi/match-list?sportsid=4", {
+                const response = yield axios_1.default.get("http://64.227.139.183:3088/sportapi/match-list?sportsid=4", {
                     headers: {
                         "x-api-key": "a3f41cc1eff0e0609f70b738d9e9d6cfda7b7465",
                         "x-api-secret": "06926b1891e99df1dd28f123c4935cfb87d07e4b9641f21ac99bc6f31263f946",

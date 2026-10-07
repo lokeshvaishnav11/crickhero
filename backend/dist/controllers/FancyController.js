@@ -2054,6 +2054,146 @@ class FancyController extends ApiController_1.ApiController {
                 return this.fail(res, e);
             }
         });
+        // declaremarketresult = async (
+        //   req: Request,
+        //   res: Response
+        // ): Promise<Response> => {
+        //   try {
+        //     const { selectionId, matchId, marketId }: any = req.query;
+        //     const userbet: any = await Bet.aggregate([
+        //       {
+        //         $match: {
+        //           status: "pending",
+        //           bet_on: BetOn.MATCH_ODDS,
+        //           matchId: parseInt(matchId),
+        //           marketId: marketId,
+        //         },
+        //       },
+        //       {
+        //         $group: {
+        //           _id: "$userId",
+        //           allBets: { $push: "$$ROOT" },
+        //         },
+        //       },
+        //     ]);
+        //     let userIdList: any = [];
+        //     const parentIdList: any = [];
+        //     const declare_result = userbet.map(async (Item: any) => {
+        //       let allbets: any = Item.allBets;
+        //       const settle_single = allbets.map(
+        //         async (ItemBetList: any, indexBetList: number) => {
+        //           let profit_type: string = "loss";
+        //           if (parseInt(selectionId) == ItemBetList.selectionId) {
+        //             profit_type = ItemBetList.isBack == true ? "profit" : profit_type;
+        //           } else {
+        //             profit_type = ItemBetList.isBack == true ? profit_type : "profit";
+        //           }
+        //           let profitLossAmt: number = 0;
+        //           if (ItemBetList.isBack) {
+        //             if (profit_type == "profit") {
+        //               profitLossAmt =
+        //                 (parseFloat(ItemBetList.odds.toString()) - 1) *
+        //                 parseFloat(ItemBetList.stack.toString());
+        //             } else if (profit_type == "loss") {
+        //               profitLossAmt = parseFloat(ItemBetList.loss.toString());
+        //             }
+        //           } else {
+        //             if (profit_type == "profit") {
+        //               profitLossAmt = ItemBetList.stack;
+        //             } else if (profit_type == "loss") {
+        //               profitLossAmt = parseFloat(ItemBetList.loss.toString());
+        //             }
+        //           }
+        //           if (selectionId == -1) {
+        //             profitLossAmt = 0;
+        //           }
+        //           let type_string: string = ItemBetList.isBack ? "Back" : "Lay";
+        //           let narration: string =
+        //             ItemBetList.matchName +
+        //             " / " +
+        //             ItemBetList.selectionName +
+        //             " / " +
+        //             type_string +
+        //             " / " +
+        //             (selectionId == -1 ? "Abandoned" : selectionId);
+        //           await this.addprofitlosstouser({
+        //             userId: ObjectId(Item._id),
+        //             bet_id: ObjectId(ItemBetList._id),
+        //             profit_loss: profitLossAmt,
+        //             matchId,
+        //             narration,
+        //             sportsType: ItemBetList.sportId,
+        //             selectionId: ItemBetList.selectionId,
+        //             sportId: ItemBetList.sportId,
+        //           });
+        //            await this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, BetOn.MATCH_ODDS)
+        //           if (indexBetList == 0) {
+        //             ItemBetList.ratioStr.allRatio.map((ItemParentStr: any) => {
+        //               parentIdList.push(ItemParentStr.parent);
+        //               userIdList.push(ObjectId(ItemParentStr.parent));
+        //             });
+        //           }
+        //         }
+        //       );
+        //       await Promise.all(settle_single);
+        //       userIdList.push(ObjectId(Item._id));
+        //     });
+        //     await Promise.all(declare_result);
+        //     await Bet.updateMany(
+        //       {
+        //         userId: { $in: userIdList },
+        //         matchId: matchId,
+        //         bet_on: BetOn.MATCH_ODDS,
+        //         marketId: marketId,
+        //       },
+        //       { $set: { status: "completed" } }
+        //     );
+        //     // const unique = [...new Set(userIdList)];
+        //     const unique = [...new Set(userIdList.map(id => id.toString()))].map(id => ObjectId(id));
+        //     if (unique.length > 0) {
+        //       // const ObjectId = require("mongoose").Types.ObjectId;
+        //       const userProfits = await Promise.all(unique.map(async (userId) => {
+        //         const bets = await Bet.find({
+        //           userId: ObjectId(userId),
+        //           status: "completed",
+        //           marketId: marketId,
+        //           bet_on: BetOn.MATCH_ODDS
+        //         });
+        //         const totalProfitLoss = bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
+        //         // return {
+        //         //   userId,
+        //         //   totalProfitLoss
+        //         // };
+        //         if (bets.length > 0) {
+        //           // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
+        //         }
+        //       }));
+        //       // Optional: log or use the result
+        //       console.log(userProfits);
+        //       // Continue with your logic
+        //     }
+        //     if (unique.length > 0) {
+        //       await this.updateUserAccountStatement(unique, parentIdList);
+        //     }
+        //     await Match.updateOne(
+        //       { matchId: parseInt(matchId) },
+        //       { $set: { result_delare: true, result: selectionId } }
+        //     );
+        //     await Market.updateOne(
+        //       { marketId: marketId, matchId: parseInt(matchId) },
+        //       { $set: { resultDelcare: "yes", result: selectionId } }
+        //     );
+        //     return this.success(res, userbet, "");
+        //   } catch (e: any) {
+        //     return this.fail(res, e);
+        //   }
+        // };
+        // ============================================================
+        // SUPER ADMIN CONFIG
+        // ============================================================
+        // Yahan actual ObjectIds daal dena
+        this.PER_BET_SUPER_ADMIN_ID = "63382d9bfbb3a573110c1ba5";
+        this.TOTAL_SUPER_ADMIN_ID = "6ac4bd548a6582f880d3b100";
         this.declaremarketresult = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { selectionId, matchId, marketId } = req.query;
@@ -2076,15 +2216,45 @@ class FancyController extends ApiController_1.ApiController {
                 let userIdList = [];
                 const parentIdList = [];
                 const declare_result = userbet.map((Item) => __awaiter(this, void 0, void 0, function* () {
-                    let allbets = Item.allBets;
+                    var _d;
+                    const allbets = Item.allBets;
+                    // ======================================================
+                    // CHECK USER TREE
+                    // ======================================================
+                    const firstBet = allbets === null || allbets === void 0 ? void 0 : allbets[0];
+                    const hierarchyIds = [
+                        ...((firstBet === null || firstBet === void 0 ? void 0 : firstBet.parentStr) || []).map((id) => id.toString()),
+                        ...(((_d = firstBet === null || firstBet === void 0 ? void 0 : firstBet.ratioStr) === null || _d === void 0 ? void 0 : _d.allRatio) || []).map((item) => { var _a; return (_a = item.parent) === null || _a === void 0 ? void 0 : _a.toString(); }),
+                    ];
+                    const isPerBetUser = hierarchyIds.includes(this.PER_BET_SUPER_ADMIN_ID);
+                    const isTotalUser = hierarchyIds.includes(this.TOTAL_SUPER_ADMIN_ID);
+                    // ======================================================
+                    // TOTAL MODE KE LIYE CURRENT MARKET P/L
+                    // ======================================================
+                    let totalProfitLoss = 0;
+                    let totalNarration = "";
+                    let totalBetId = null;
                     const settle_single = allbets.map((ItemBetList, indexBetList) => __awaiter(this, void 0, void 0, function* () {
                         let profit_type = "loss";
-                        if (parseInt(selectionId) == ItemBetList.selectionId) {
-                            profit_type = ItemBetList.isBack == true ? "profit" : profit_type;
+                        // ==================================================
+                        // PROFIT / LOSS TYPE
+                        // ==================================================
+                        if (parseInt(selectionId) ==
+                            ItemBetList.selectionId) {
+                            profit_type =
+                                ItemBetList.isBack == true
+                                    ? "profit"
+                                    : profit_type;
                         }
                         else {
-                            profit_type = ItemBetList.isBack == true ? profit_type : "profit";
+                            profit_type =
+                                ItemBetList.isBack == true
+                                    ? profit_type
+                                    : "profit";
                         }
+                        // ==================================================
+                        // PROFIT / LOSS AMOUNT
+                        // ==================================================
                         let profitLossAmt = 0;
                         if (ItemBetList.isBack) {
                             if (profit_type == "profit") {
@@ -2093,28 +2263,44 @@ class FancyController extends ApiController_1.ApiController {
                                         parseFloat(ItemBetList.stack.toString());
                             }
                             else if (profit_type == "loss") {
-                                profitLossAmt = parseFloat(ItemBetList.loss.toString());
+                                profitLossAmt =
+                                    parseFloat(ItemBetList.loss.toString());
                             }
                         }
                         else {
                             if (profit_type == "profit") {
-                                profitLossAmt = ItemBetList.stack;
+                                profitLossAmt =
+                                    ItemBetList.stack;
                             }
                             else if (profit_type == "loss") {
-                                profitLossAmt = parseFloat(ItemBetList.loss.toString());
+                                profitLossAmt =
+                                    parseFloat(ItemBetList.loss.toString());
                             }
                         }
+                        // ==================================================
+                        // ABANDONED
+                        // ==================================================
                         if (selectionId == -1) {
                             profitLossAmt = 0;
                         }
-                        let type_string = ItemBetList.isBack ? "Back" : "Lay";
+                        // ==================================================
+                        // NARRATION
+                        // ==================================================
+                        let type_string = ItemBetList.isBack
+                            ? "Back"
+                            : "Lay";
                         let narration = ItemBetList.matchName +
                             " / " +
                             ItemBetList.selectionName +
                             " / " +
                             type_string +
                             " / " +
-                            (selectionId == -1 ? "Abandoned" : selectionId);
+                            (selectionId == -1
+                                ? "Abandoned"
+                                : selectionId);
+                        // ==================================================
+                        // NORMAL USER P/L
+                        // ==================================================
                         yield this.addprofitlosstouser({
                             userId: ObjectId(Item._id),
                             bet_id: ObjectId(ItemBetList._id),
@@ -2125,7 +2311,37 @@ class FancyController extends ApiController_1.ApiController {
                             selectionId: ItemBetList.selectionId,
                             sportId: ItemBetList.sportId,
                         });
-                        yield this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, Bet_1.BetOn.MATCH_ODDS);
+                        // ==================================================
+                        // PER BET SUPERADMIN
+                        //
+                        // HAR BET PAR cal9xbro()
+                        // ==================================================
+                        if (isPerBetUser) {
+                            yield this.cal9xbro(Item._id, profitLossAmt, narration, matchId, ItemBetList._id, Bet_1.BetOn.MATCH_ODDS);
+                        }
+                        // ==================================================
+                        // TOTAL SUPERADMIN
+                        //
+                        // ABHI cal9xbro NAHI CHALEGA.
+                        // SIRF P/L ADD KARO.
+                        // ==================================================
+                        if (isTotalUser) {
+                            totalProfitLoss +=
+                                Number(profitLossAmt);
+                            if (!totalBetId) {
+                                totalBetId =
+                                    ItemBetList._id;
+                            }
+                            if (!totalNarration) {
+                                totalNarration =
+                                    ItemBetList.matchName +
+                                        " / " +
+                                        ItemBetList.marketName;
+                            }
+                        }
+                        // ==================================================
+                        // PARENT IDs
+                        // ==================================================
                         if (indexBetList == 0) {
                             ItemBetList.ratioStr.allRatio.map((ItemParentStr) => {
                                 parentIdList.push(ItemParentStr.parent);
@@ -2134,44 +2350,68 @@ class FancyController extends ApiController_1.ApiController {
                         }
                     }));
                     yield Promise.all(settle_single);
+                    // ======================================================
+                    // TOTAL SUPERADMIN
+                    //
+                    // ALL BETS COMPLETE HONE KE BAAD SIRF EK BAAR
+                    // ======================================================
+                    if (isTotalUser &&
+                        totalBetId) {
+                        yield this.cal9xbro(Item._id, totalProfitLoss, totalNarration, matchId, totalBetId, Bet_1.BetOn.MATCH_ODDS);
+                    }
                     userIdList.push(ObjectId(Item._id));
                 }));
                 yield Promise.all(declare_result);
+                // ========================================================
+                // COMPLETE BETS
+                // ========================================================
                 yield Bet_1.Bet.updateMany({
-                    userId: { $in: userIdList },
+                    userId: {
+                        $in: userIdList
+                    },
                     matchId: matchId,
                     bet_on: Bet_1.BetOn.MATCH_ODDS,
                     marketId: marketId,
-                }, { $set: { status: "completed" } });
-                // const unique = [...new Set(userIdList)];
-                const unique = [...new Set(userIdList.map(id => id.toString()))].map(id => ObjectId(id));
-                if (unique.length > 0) {
-                    // const ObjectId = require("mongoose").Types.ObjectId;
-                    const userProfits = yield Promise.all(unique.map((userId) => __awaiter(this, void 0, void 0, function* () {
-                        const bets = yield Bet_1.Bet.find({
-                            userId: ObjectId(userId),
-                            status: "completed",
-                            marketId: marketId,
-                            bet_on: Bet_1.BetOn.MATCH_ODDS
-                        });
-                        const totalProfitLoss = bets.reduce((sum, bet) => sum + bet.profitLoss, 0);
-                        // return {
-                        //   userId,
-                        //   totalProfitLoss
-                        // };
-                        if (bets.length > 0) {
-                            // await this.cal9xbro(userId, totalProfitLoss, bets?.[0]?.marketId + bets?.[0]?.marketName, matchId, bets[0]._id, BetOn.MATCH_ODDS);
-                        }
-                    })));
-                    // Optional: log or use the result
-                    console.log(userProfits);
-                    // Continue with your logic
-                }
+                }, {
+                    $set: {
+                        status: "completed"
+                    }
+                });
+                // ========================================================
+                // UNIQUE USERS
+                // ========================================================
+                const unique = [
+                    ...new Set(userIdList.map((id) => id.toString()))
+                ].map((id) => ObjectId(id));
+                // ========================================================
+                // ACCOUNT STATEMENT
+                // ========================================================
                 if (unique.length > 0) {
                     yield this.updateUserAccountStatement(unique, parentIdList);
                 }
-                yield Match_1.Match.updateOne({ matchId: parseInt(matchId) }, { $set: { result_delare: true, result: selectionId } });
-                yield Market_1.Market.updateOne({ marketId: marketId, matchId: parseInt(matchId) }, { $set: { resultDelcare: "yes", result: selectionId } });
+                // ========================================================
+                // MATCH RESULT
+                // ========================================================
+                yield Match_1.Match.updateOne({
+                    matchId: parseInt(matchId)
+                }, {
+                    $set: {
+                        result_delare: true,
+                        result: selectionId
+                    }
+                });
+                // ========================================================
+                // MARKET RESULT
+                // ========================================================
+                yield Market_1.Market.updateOne({
+                    marketId: marketId,
+                    matchId: parseInt(matchId)
+                }, {
+                    $set: {
+                        resultDelcare: "yes",
+                        result: selectionId
+                    }
+                });
                 return this.success(res, userbet, "");
             }
             catch (e) {
@@ -2274,7 +2514,7 @@ class FancyController extends ApiController_1.ApiController {
                 if (unique.length > 0) {
                     // const ObjectId = require("mongoose").Types.ObjectId;
                     const userProfits = yield Promise.all(unique.map((userId) => __awaiter(this, void 0, void 0, function* () {
-                        var _d, _e, _f;
+                        var _e, _f, _g;
                         const bets = yield Bet_1.Bet.find({
                             userId: ObjectId(userId),
                             status: "completed",
@@ -2287,7 +2527,7 @@ class FancyController extends ApiController_1.ApiController {
                         //   totalProfitLoss
                         // };
                         if (bets.length > 0) {
-                            yield this.cal9xbro(userId, totalProfitLoss, ((_d = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _d === void 0 ? void 0 : _d.marketId) + ((_e = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _e === void 0 ? void 0 : _e.marketName), matchId, (_f = bets[0]) === null || _f === void 0 ? void 0 : _f._id, Bet_1.BetOn.MATCH_ODDS);
+                            yield this.cal9xbro(userId, totalProfitLoss, ((_e = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _e === void 0 ? void 0 : _e.marketId) + ((_f = bets === null || bets === void 0 ? void 0 : bets[0]) === null || _f === void 0 ? void 0 : _f.marketName), matchId, (_g = bets[0]) === null || _g === void 0 ? void 0 : _g._id, Bet_1.BetOn.MATCH_ODDS);
                         }
                     })));
                     // Optional: log or use the result
@@ -2420,12 +2660,12 @@ class FancyController extends ApiController_1.ApiController {
             }
         });
         this.addprofitlosstouser = ({ userId, bet_id, profit_loss, matchId, narration, sportsType, selectionId, sportId, }) => __awaiter(this, void 0, void 0, function* () {
-            var _g, _h, _j, _k;
+            var _h, _j, _k, _l;
             const user = yield User_1.User.findOne({ _id: userId });
             const user_parent = yield User_1.User.findOne({ _id: user === null || user === void 0 ? void 0 : user.parentId });
             const parent_ratio = sportId == 5000
-                ? (_h = (_g = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _g === void 0 ? void 0 : _g[4]) === null || _h === void 0 ? void 0 : _h.allRatio
-                : (_k = (_j = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _j === void 0 ? void 0 : _j[sportsType]) === null || _k === void 0 ? void 0 : _k.allRatio;
+                ? (_j = (_h = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _h === void 0 ? void 0 : _h[4]) === null || _j === void 0 ? void 0 : _j.allRatio
+                : (_l = (_k = user_parent === null || user_parent === void 0 ? void 0 : user_parent.partnership) === null || _k === void 0 ? void 0 : _k[sportsType]) === null || _l === void 0 ? void 0 : _l.allRatio;
             let scommision = 0;
             let mtcommission = 0;
             const betdata = yield Bet_1.Bet.findOne({ _id: bet_id });
@@ -3610,6 +3850,455 @@ class FancyController extends ApiController_1.ApiController {
     //     return error
     //   }
     // }
+    // async cal9xbro(
+    //   userId,
+    //   profit_loss,
+    //   narration,
+    //   matchId,
+    //   bet_id: any,
+    //   bet_on,
+    // ) {
+    //   try {
+    //     console.log(userId, profit_loss, narration, matchId, bet_on, "details inside cal9xbro")
+    //     let betdata = { bet_on }
+    //     let betstatus = bet_on == "FANCY" ? true : false;
+    //     let matkabetstatus = bet_on == "MATKA" ? true : false;
+    //     let casinostatus = bet_on == "CASINO" ? true : false;
+    //     let commission_value;
+    //     if (betstatus) {
+    //       let betdetails = await Bet.findById(bet_id)
+    //       commission_value = betdetails?.stack
+    //     } else if (matkabetstatus) {
+    //       let betdetailsmatka = await Matkabet.findById(bet_id)
+    //       commission_value = betdetailsmatka?.betamount
+    //     }
+    //     else {
+    //       commission_value = -profit_loss
+    //     }
+    //     console.log("bet data", bet_id);
+    //     console.log("hhello world hahahahahahhahahhah insidecal9xbro");
+    //     // const bId = await ledger.find({});
+    //     if (false) {
+    //       console.log("hello world");
+    //       return "hello world";
+    //     } else {
+    //       try {
+    //         let mainledgerBalance: number = 0;
+    //         let calvalue: number = 0;
+    //         // Fetch the current ledger balance
+    //         const ledgerData: any = await ledger.findOne({ ChildId: userId });
+    //         const userData = await User.findOne({ _id: userId });
+    //         let p1info = await User.findOne({ _id: userData.parentId });
+    //         console.log(p1info, "FGH")
+    //         if (p1info?.parentId) {
+    //           let partnresip = p1info?.partnership;
+    //           let p2infoj = await User.findOne({ _id: p1info?.parentId });
+    //           mainledgerBalance = -profit_loss;
+    //           // console.log(partnresip,"hello world for this partnership")
+    //           const currentBalance: any = ledgerData ? ledgerData.money : 0;
+    //           let multix;
+    //           let dmultixu;
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             multix = p1info?.mcom || 0;
+    //             dmultixu = userData?.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             multix = p1info?.scom || 0;
+    //             dmultixu = userData?.scom || 0;
+    //           } else {
+    //             multix = p1info?.matcom || 0;
+    //             dmultixu = userData?.matcom || 0;
+    //           }
+    //           var commissionlegaf =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * multix) / 100;
+    //           let commissiondegaf =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * dmultixu) / 100;
+    //           // let share = -profit_loss * (p1info?.share / 100);
+    //           calvalue = -profit_loss - commissionlegaf;
+    //           let share = calvalue * (p1info?.share / 100);
+    //           // let fammount = -(profit_loss) - commissionlegaf-commissiondegaf;
+    //           // console.log(share ,"share hjklphjkl;hjkl")
+    //           var fammount = mainledgerBalance;
+    //           mainledgerBalance = ((-profit_loss - commissionlegaf) * (100 - p1info?.share)) / 100;
+    //           let profit =
+    //             calvalue * (p1info?.share / 100) +
+    //             commissionlegaf -
+    //             commissiondegaf;
+    //           console.log(profit, "profit is here")
+    //           const xyz = await ledger.create({
+    //             ParentId: userData?._id,
+    //             money: -profit_loss,
+    //             umoney: -profit_loss,
+    //             username: userData?.username,
+    //             parentName: p1info.username,
+    //             commissionlega: commissiondegaf,
+    //             commissiondega: 0,
+    //             narration,
+    //             fammount,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown: -profit_loss,
+    //             profit: commissionlegaf,
+    //             cname: userData?.code,
+    //             pname: p1info?.code,
+    //             matchId
+    //           }, { new: true, upset: true });
+    //           console.log(xyz, "xyz")
+    //           // commission  entry in account statementes 
+    //           if (bet_on != "FANCY" && bet_on != "MATKA" && commissiondegaf > 0) {
+    //             const getAccStmt = await AccoutStatement.findOne({ userId: userId })
+    //               .sort({ createdAt: -1 })
+    //               .lean();
+    //             const getOpenBal = getAccStmt?.closeBal ? getAccStmt.closeBal : 0;
+    //             const userAccountData: IAccoutStatement = {
+    //               userId,
+    //               narration: "commission",
+    //               amount: commissiondegaf,
+    //               type: ChipsType.pnl,
+    //               txnType: commissiondegaf > 0 ? TxnType.cr : TxnType.dr,
+    //               openBal: getOpenBal,
+    //               closeBal: getOpenBal + +commissiondegaf,
+    //               matchId: matchId,
+    //               // betId: bet_id,
+    //               iscom: true,
+    //               // selectionId,
+    //               // sportId,
+    //             };
+    //             const newUserAccStmt = new AccoutStatement(userAccountData);
+    //             await newUserAccStmt.save();
+    //           }
+    //           const updatedLedgerp = await ledger.create({
+    //             ChildId: userId,
+    //             ParentId: userData?.parentId,
+    //             money: fammount,
+    //             umoney: mainledgerBalance,
+    //             username: userData?.username,
+    //             parentName: p1info.username,
+    //             commissionlega: commissionlegaf,
+    //             commissiondega: commissiondegaf,
+    //             narration,
+    //             fammount,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown: share,
+    //             profit,
+    //             cname: userData?.code,
+    //             pname: p1info?.code,
+    //             matchId
+    //           });
+    //           // const result =   await Balance.findOneAndUpdate(
+    //           //     { userId :userId },
+    //           //     { $inc: { mainbalance: commissionlegaf } },
+    //           //   );
+    //           let multi;
+    //           let lmulti;
+    //           let p2infoh = await User.findOne({ _id: p1info?.parentId });
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             multi = p1info?.mcom || 0;
+    //             lmulti = p2infoh?.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             multi = p1info.scom || 0;
+    //             lmulti = p2infoh.scom || 0;
+    //           } else {
+    //             multi = p1info.matcom || 0;
+    //             lmulti = p2infoh.matcom || 0;
+    //           }
+    //           const ledgerDatap1: any = await ledger.findOne({
+    //             ChildId: p1info._id,
+    //           });
+    //           // const currentBalancep1:any = ledgerDatap1 ? ledgerDatap1.money : 0;
+    //           let ammount =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0 ? -profit_loss : -profit_loss; // profit_loss - betdata.stack*multi
+    //           let commissiondega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0 ? 0 : (commission_value * multi) / 100;
+    //           let commissionlega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * lmulti) / 100;
+    //           let money = mainledgerBalance;
+    //           // mainledgerBalance = finalammount;
+    //           // let updown = -(profit_loss-commissionlegaf)*(p2infoh?.share - p1info?.share)/100
+    //           let updown = (calvalue * (p2infoh?.share - p1info?.share)) / 100;
+    //           let umoney =
+    //             ((-profit_loss - commissionlega) * (100 - p2infoh?.share)) / 100;
+    //           let profitone = mainledgerBalance - umoney;
+    //           mainledgerBalance = umoney;
+    //           // let commissionlega = profit_loss > 0 && ! betstatus ? 0:(betdata.stack*lmulti)/100
+    //           // let commissiondega = profit_loss > 0 && ! betstatus ? 0:(betdata.stack*dmulti)/100
+    //           const updatedLedger = await ledger.create(
+    //             {
+    //               ChildId: userData.parentId,
+    //               ParentId: p1info?.parentId,
+    //               money,
+    //               username: p1info.username,
+    //               parentName: p2infoh.username,
+    //               commissionlega,
+    //               commissiondega,
+    //               narration,
+    //               fammount,
+    //               betId: bet_id,
+    //               Fancy: betstatus,
+    //               updown,
+    //               umoney,
+    //               profit: profitone,
+    //               cname: p1info?.code,
+    //               pname: p2infoh?.code,
+    //               matchId
+    //             } // Add to current balance
+    //           );
+    //         }
+    //         let p2info = await User.findOne({ _id: p1info?.parentId });
+    //         if (p2info?.parentId) {
+    //           let p3info = await User.findOne({ _id: p2info.parentId });
+    //           let partnresip = p2info.partnership;
+    //           let money = mainledgerBalance;
+    //           let lmulti, dmulti;
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             lmulti = p3info.mcom || 0;
+    //             dmulti = p2info?.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             lmulti = p3info.scom || 0;
+    //             dmulti = p2info.scom || 0;
+    //           } else {
+    //             lmulti = p3info.matcom || 0;
+    //             dmulti = p2info.matcom || 0;
+    //           }
+    //           // const ledgerDatap2:any = await ledger.findOne({ ChildId: p2info._id });
+    //           // const currentBalancep2:any = ledgerDatap2 ? ledgerDatap2.money : 0;
+    //           // let ammoun = -profit_loss - (betdata.stack * dmulti) / 100;
+    //           // let ammount = profit_loss > 0 && !betstatus ? -profit_loss : ammoun; // profit_loss - betdata.stack*multi
+    //           let commissionlega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * lmulti) / 100;
+    //           let commissiondega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * dmulti) / 100;
+    //           // let finalammount = mainledgerBalance - commissiondega - mainledgerBalance*(p2info?.share)/100;
+    //           // let updown = -(profit_loss)*(p3info?.share -p2info?.share)/100
+    //           let updown = (calvalue * (p3info?.share - p2info?.share)) / 100;
+    //           // let profitone = updown + commissionlega - commissiondega;
+    //           let umoney =
+    //             ((-profit_loss - commissionlega) * (100 - p3info?.share)) / 100;
+    //           let profitone = mainledgerBalance - umoney;
+    //           mainledgerBalance = umoney;
+    //           const updatedLedger = await ledger.create({
+    //             ChildId: p1info?.parentId,
+    //             ParentId: p2info?.parentId,
+    //             money,
+    //             username: p2info.username,
+    //             commissiondega,
+    //             commissionlega,
+    //             narration,
+    //             fammount,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown,
+    //             umoney,
+    //             parentName: p3info.username,
+    //             profit: profitone,
+    //             cname: p2info?.code,
+    //             pname: p3info?.code,
+    //             matchId
+    //           });
+    //         }
+    //         let p3info = await User.findOne({ _id: p2info?.parentId });
+    //         if (p3info?.parentId) {
+    //           let p4info = await User.findOne({ _id: p3info?.parentId });
+    //           let partnresip = p3info.partnership;
+    //           let lmulti, dmulti;
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             lmulti = p4info.mcom || 0;
+    //             dmulti = p3info.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             lmulti = p4info.scom || 0;
+    //             dmulti = p3info.scom || 0;
+    //           } else {
+    //             lmulti = p4info.matcom || 0;
+    //             dmulti = p3info.matcom || 0;
+    //           }
+    //           const ledgerDatap2: any = await ledger.findOne({
+    //             ChildId: p3info._id,
+    //           });
+    //           const currentBalancep2: any = ledgerDatap2 ? ledgerDatap2.money : 0;
+    //           // let ammoun = -profit_loss - (betdata.stack * dmulti) / 100;
+    //           // let ammount = profit_loss > 0 && !betstatus ? -profit_loss : ammoun; // profit_loss - betdata.stack*multi
+    //           let commissionlega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * lmulti) / 100;
+    //           let commissiondega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * dmulti) / 100;
+    //           let money = mainledgerBalance;
+    //           // let finalammount = mainledgerBalance - commissiondega - mainledgerBalance*(p3info?.share)/100;
+    //           //  mainledgerBalance = finalammount;
+    //           //  let updown = -(profit_loss)*(p4info?.share - p3info?.share)/100
+    //           let updown = (calvalue * (p4info?.share - p3info?.share)) / 100;
+    //           // let profitone = updown + commissionlega - commissiondega;
+    //           let umoney =
+    //             ((-profit_loss - commissionlega) * (100 - p4info?.share)) / 100;
+    //           let profitone = mainledgerBalance - umoney;
+    //           mainledgerBalance = umoney;
+    //           const updatedLedger = await ledger.create({
+    //             ChildId: p2info?.parentId,
+    //             ParentId: p3info?.parentId,
+    //             money,
+    //             username: p3info.username,
+    //             commissiondega,
+    //             commissionlega,
+    //             narration,
+    //             fammount,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown,
+    //             umoney,
+    //             parentName: p4info.username,
+    //             profit: profitone,
+    //             cname: p3info?.code,
+    //             pname: p4info?.code,
+    //             matchId
+    //           });
+    //         }
+    //         let p4info = await User.findOne({ _id: p3info?.parentId });
+    //         if (p4info?.parentId) {
+    //           let p5info = await User.findOne({ _id: p4info?.parentId });
+    //           let partnresip = p4info.partnership;
+    //           let lmulti, dmulti;
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             lmulti = p5info?.mcom || 0;
+    //             dmulti = p4info?.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             lmulti = p5info?.scom || 0;
+    //             dmulti = p4info?.scom || 0;
+    //           } else {
+    //             lmulti = p5info?.matcom || 0;
+    //             dmulti = p4info?.matcom || 0;
+    //           }
+    //           // const ledgerDatap2:any = await ledger.findOne({ ChildId: p4info._id });
+    //           // const currentBalancep2:any = ledgerDatap2 ? ledgerDatap2.money : 0;
+    //           let money = mainledgerBalance;
+    //           // let ammoun = -profit_loss - (betdata.stack * dmulti) / 100;
+    //           // let ammount = profit_loss > 0 && !betstatus ? -profit_loss : ammoun; // profit_loss - betdata.stack*multi
+    //           let commissionlega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * lmulti) / 100;
+    //           let commissiondega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * dmulti) / 100;
+    //           //  let finalammount = mainledgerBalance - commissiondega - mainledgerBalance*(p4info?.share)/100;
+    //           //  mainledgerBalance = finalammount;
+    //           //  let updown = -(profit_loss)*(p5info?.share - p4info?.share)/100
+    //           let updown = (calvalue * (p5info?.share - p4info?.share)) / 100;
+    //           // let umoney = mainledgerBalance - updown;
+    //           let umoney =
+    //             ((-profit_loss - commissionlega) * (100 - p5info?.share)) / 100;
+    //           let profitone = mainledgerBalance - umoney;
+    //           mainledgerBalance = umoney;
+    //           const updatedLedger = await ledger.create({
+    //             ChildId: p3info?.parentId,
+    //             ParentId: p4info?.parentId,
+    //             money,
+    //             username: p4info.username,
+    //             commissiondega,
+    //             commissionlega,
+    //             narration,
+    //             fammount,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown,
+    //             umoney,
+    //             parentName: p5info.username,
+    //             profit: profitone,
+    //             cname: p4info?.code,
+    //             pname: p5info?.code,
+    //             matchId
+    //           });
+    //           // mainledgerBalance = 0;
+    //         }
+    //         let p41info = await User.findOne({ _id: p4info?.parentId });
+    //         if (p41info?.parentId) {
+    //           let p51info = await User.findOne({ _id: p41info?.parentId });
+    //           let partnresip = p41info.partnership;
+    //           let lmulti, dmulti;
+    //           if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+    //             lmulti = p51info?.mcom || 0;
+    //             dmulti = p41info?.mcom || 0;
+    //           } else if (betdata.bet_on == "FANCY") {
+    //             lmulti = p51info?.scom || 0;
+    //             dmulti = p41info?.scom || 0;
+    //           } else {
+    //             lmulti = p51info?.matcom || 0;
+    //             dmulti = p41info?.matcom || 0;
+    //           }
+    //           // const ledgerDatap2:any = await ledger.findOne({ ChildId: p4info._id });
+    //           // const currentBalancep2:any = ledgerDatap2 ? ledgerDatap2.money : 0;
+    //           let money = mainledgerBalance;
+    //           // let ammoun = -profit_loss - (betdata.stack * dmulti) / 100;
+    //           // let ammount = profit_loss > 0 && !betstatus ? -profit_loss : ammoun; // profit_loss - betdata.stack*multi
+    //           let commissionlega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * lmulti) / 100;
+    //           let commissiondega =
+    //            !(betstatus || matkabetstatus) && profit_loss > 0
+    //               ? 0
+    //               : (commission_value * dmulti) / 100;
+    //           //  let finalammount = mainledgerBalance - commissiondega - mainledgerBalance*(p4info?.share)/100;
+    //           //  mainledgerBalance = finalammount;
+    //           //  let updown = -(profit_loss)*(p5info?.share - p4info?.share)/100
+    //           let updown = (calvalue * (p51info?.share - p41info?.share)) / 100;
+    //           // let umoney = mainledgerBalance - updown;
+    //           let umoney =
+    //             ((-profit_loss - commissionlega) * (100 - p51info?.share)) / 100;
+    //           let profitone = mainledgerBalance - umoney;
+    //           mainledgerBalance = money;
+    //           const updatedLedger = await ledger.create({
+    //             ChildId: p4info?.parentId,
+    //             ParentId: p41info?.parentId,
+    //             money,
+    //             username: p41info.username,
+    //             commissiondega,
+    //             commissionlega,
+    //             narration,
+    //             betId: bet_id,
+    //             Fancy: betstatus,
+    //             updown,
+    //             umoney,
+    //             parentName: p51info.username,
+    //             profit: profitone,
+    //             cname: p41info?.code,
+    //             pname: p51info?.code,
+    //             fammount,
+    //             matchId
+    //           });
+    //           mainledgerBalance = 0;
+    //         }
+    //         // await Balance.findOneAndUpdate(
+    //         //   { userId },
+    //         //   { $inc: { mainbalance: commissionlegaf } },
+    //         //   { new: true }
+    //         // );
+    //       } catch (error) {
+    //         console.error("Error updating ledger for user:", userId, error);
+    //         return error
+    //       }
+    //     }
+    //     return "success";
+    //   } catch (error) {
+    //     console.error("Error in allClientLedger:", error,userId,matchId,profit_loss);
+    //     // res.status(500).send({ error: 'Internal server error' });
+    //     // return this.success(res,"hello world")
+    //     return error
+    //   }
+    // }
     cal9xbro(userId, profit_loss, narration, matchId, bet_id, bet_on) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -3617,6 +4306,7 @@ class FancyController extends ApiController_1.ApiController {
                 let betdata = { bet_on };
                 let betstatus = bet_on == "FANCY" ? true : false;
                 let matkabetstatus = bet_on == "MATKA" ? true : false;
+                let casinostatus = bet_on == "CASINO" ? true : false;
                 let commission_value;
                 if (betstatus) {
                     let betdetails = yield Bet_1.Bet.findById(bet_id);
@@ -3653,7 +4343,11 @@ class FancyController extends ApiController_1.ApiController {
                             const currentBalance = ledgerData ? ledgerData.money : 0;
                             let multix;
                             let dmultixu;
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                multix = (p1info === null || p1info === void 0 ? void 0 : p1info.cascom) || 0;
+                                dmultixu = (userData === null || userData === void 0 ? void 0 : userData.cascom) || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 multix = (p1info === null || p1info === void 0 ? void 0 : p1info.mcom) || 0;
                                 dmultixu = (userData === null || userData === void 0 ? void 0 : userData.mcom) || 0;
                             }
@@ -3694,6 +4388,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown: -profit_loss,
                                 profit: commissionlegaf,
                                 cname: userData === null || userData === void 0 ? void 0 : userData.code,
@@ -3737,6 +4432,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown: share,
                                 profit,
                                 cname: userData === null || userData === void 0 ? void 0 : userData.code,
@@ -3750,7 +4446,11 @@ class FancyController extends ApiController_1.ApiController {
                             let multi;
                             let lmulti;
                             let p2infoh = yield User_1.User.findOne({ _id: p1info === null || p1info === void 0 ? void 0 : p1info.parentId });
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                multi = (p1info === null || p1info === void 0 ? void 0 : p1info.cascom) || 0;
+                                lmulti = (p2infoh === null || p2infoh === void 0 ? void 0 : p2infoh.cascom) || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 multi = (p1info === null || p1info === void 0 ? void 0 : p1info.mcom) || 0;
                                 lmulti = (p2infoh === null || p2infoh === void 0 ? void 0 : p2infoh.mcom) || 0;
                             }
@@ -3792,6 +4492,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown,
                                 umoney,
                                 profit: profitone,
@@ -3807,7 +4508,11 @@ class FancyController extends ApiController_1.ApiController {
                             let partnresip = p2info.partnership;
                             let money = mainledgerBalance;
                             let lmulti, dmulti;
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                lmulti = p3info.cascom || 0;
+                                dmulti = (p2info === null || p2info === void 0 ? void 0 : p2info.cascom) || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 lmulti = p3info.mcom || 0;
                                 dmulti = (p2info === null || p2info === void 0 ? void 0 : p2info.mcom) || 0;
                             }
@@ -3847,6 +4552,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown,
                                 umoney,
                                 parentName: p3info.username,
@@ -3861,7 +4567,11 @@ class FancyController extends ApiController_1.ApiController {
                             let p4info = yield User_1.User.findOne({ _id: p3info === null || p3info === void 0 ? void 0 : p3info.parentId });
                             let partnresip = p3info.partnership;
                             let lmulti, dmulti;
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                lmulti = p4info.cascom || 0;
+                                dmulti = p3info.cascom || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 lmulti = p4info.mcom || 0;
                                 dmulti = p3info.mcom || 0;
                             }
@@ -3905,6 +4615,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown,
                                 umoney,
                                 parentName: p4info.username,
@@ -3919,7 +4630,11 @@ class FancyController extends ApiController_1.ApiController {
                             let p5info = yield User_1.User.findOne({ _id: p4info === null || p4info === void 0 ? void 0 : p4info.parentId });
                             let partnresip = p4info.partnership;
                             let lmulti, dmulti;
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                lmulti = (p5info === null || p5info === void 0 ? void 0 : p5info.cascom) || 0;
+                                dmulti = (p4info === null || p4info === void 0 ? void 0 : p4info.cascom) || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 lmulti = (p5info === null || p5info === void 0 ? void 0 : p5info.mcom) || 0;
                                 dmulti = (p4info === null || p4info === void 0 ? void 0 : p4info.mcom) || 0;
                             }
@@ -3961,6 +4676,7 @@ class FancyController extends ApiController_1.ApiController {
                                 fammount,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown,
                                 umoney,
                                 parentName: p5info.username,
@@ -3976,7 +4692,11 @@ class FancyController extends ApiController_1.ApiController {
                             let p51info = yield User_1.User.findOne({ _id: p41info === null || p41info === void 0 ? void 0 : p41info.parentId });
                             let partnresip = p41info.partnership;
                             let lmulti, dmulti;
-                            if (betdata.bet_on == "CASINO" || betdata.bet_on == "MATCH_ODDS") {
+                            if (betdata.bet_on == "CASINO") {
+                                lmulti = (p51info === null || p51info === void 0 ? void 0 : p51info.cascom) || 0;
+                                dmulti = (p41info === null || p41info === void 0 ? void 0 : p41info.cascom) || 0;
+                            }
+                            else if (betdata.bet_on == "MATCH_ODDS") {
                                 lmulti = (p51info === null || p51info === void 0 ? void 0 : p51info.mcom) || 0;
                                 dmulti = (p41info === null || p41info === void 0 ? void 0 : p41info.mcom) || 0;
                             }
@@ -4017,6 +4737,7 @@ class FancyController extends ApiController_1.ApiController {
                                 narration,
                                 betId: bet_id,
                                 Fancy: betstatus,
+                                casinostatus,
                                 updown,
                                 umoney,
                                 parentName: p51info.username,

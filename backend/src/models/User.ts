@@ -51,6 +51,7 @@ export interface IUser {
   pshare?:number
   mcom?:number
   scom?:number
+  cascom?:number
 
   matcom?:number
   matkalimit?:number
@@ -96,6 +97,8 @@ export const userSchema: Schema = new Schema(
     share:Number,
     pshare:Number,
     mcom:Number,
+    cascom:Number,
+
     scom:Number,
     code:String,
     matcom:{type:Number,default:0},

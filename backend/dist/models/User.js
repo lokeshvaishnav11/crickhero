@@ -53,6 +53,7 @@ exports.userSchema = new mongoose_1.Schema({
     share: Number,
     pshare: Number,
     mcom: Number,
+    cascom: Number,
     scom: Number,
     code: String,
     matcom: { type: Number, default: 0 },

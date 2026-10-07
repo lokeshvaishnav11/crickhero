@@ -42,6 +42,7 @@ const allledger = new mongoose_1.Schema({
     narration: String,
     fammount: Number,
     Fancy: { type: Boolean, default: false },
+    casinostatus: { type: Boolean, default: false },
     settled: { type: Boolean, default: false },
     updown: { type: Number, default: 0 },
     parentName: String,

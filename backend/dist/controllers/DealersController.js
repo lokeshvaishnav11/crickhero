@@ -498,13 +498,13 @@ class DealersController extends ApiController_1.ApiController {
     //   }
     // }
     signUp(req, res) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const session = yield Database_1.Database.getInstance().startSession();
             let changePassAndTxn = false;
             try {
                 session.startTransaction();
-                const { password, username, code, share, pshare, mcom, matcom, scom, sendamount, parent, partnership, role, fullname, city, phone, creditRefrences, exposerLimit, userSetting, } = req.body;
+                const { password, username, code, share, pshare, mcom, matcom, scom, cascom, sendamount, parent, partnership, role, fullname, city, phone, creditRefrences, exposerLimit, userSetting, } = req.body;
                 console.log(req.body, "req body for code");
                 const currentUser = req.user;
                 const currentUserData = yield User_1.User.findOne({
@@ -537,6 +537,32 @@ class DealersController extends ApiController_1.ApiController {
                     yield session.abortTransaction();
                     session.endSession();
                     return this.fail(res, "Parent User not exixts!");
+                }
+                /* ============================================================
+               MATCH COMMISSION VALIDATION
+        
+               SuperAdmin 1:
+               63382d9bfbb3a573110c1ba5
+               Khud + poori child hierarchy => MAX 1.5
+        
+               Baaki SuperAdmin/tree => MAX 2
+            ============================================================ */
+                const SUPERADMIN_1_ID = "63382d9bfbb3a573110c1ba5";
+                // Actual parent ki complete hierarchy ko string me convert karo
+                const parentHierarchyIds = ((parentUser === null || parentUser === void 0 ? void 0 : parentUser.parentStr) || []).map((id) => id === null || id === void 0 ? void 0 : id.toString());
+                // Parent khud first SuperAdmin hai YA uske parentStr me first SuperAdmin hai
+                const isSuperAdmin1Tree = ((_a = parentUser === null || parentUser === void 0 ? void 0 : parentUser._id) === null || _a === void 0 ? void 0 : _a.toString()) === SUPERADMIN_1_ID ||
+                    parentHierarchyIds.includes(SUPERADMIN_1_ID);
+                // First SuperAdmin tree = 1.5
+                // Baaki tree = 2
+                const maxMatchCommission = isSuperAdmin1Tree ? 1.5 : 2;
+                const requestedMatchCommission = Number(mcom);
+                if (!Number.isFinite(requestedMatchCommission) ||
+                    requestedMatchCommission < 0 ||
+                    requestedMatchCommission > maxMatchCommission) {
+                    yield session.abortTransaction();
+                    session.endSession();
+                    return this.fail(res, `Match commission must be between 0 and ${maxMatchCommission}`);
                 }
                 /* ============================================================
                    EXPOSER LIMIT
@@ -654,6 +680,7 @@ class DealersController extends ApiController_1.ApiController {
                     mcom,
                     matcom,
                     scom,
+                    cascom,
                     code: username,
                     password,
                     role: role,
@@ -756,7 +783,7 @@ class DealersController extends ApiController_1.ApiController {
                     return this.success(res, {}, "New User Added and Funded Successfully");
                 }
                 catch (err) {
-                    console.log(((_a = err === null || err === void 0 ? void 0 : err.response) === null || _a === void 0 ? void 0 : _a.data) || (err === null || err === void 0 ? void 0 : err.message) || err, "error in adding balance");
+                    console.log(((_b = err === null || err === void 0 ? void 0 : err.response) === null || _b === void 0 ? void 0 : _b.data) || (err === null || err === void 0 ? void 0 : err.message) || err, "error in adding balance");
                     /*
                      * User DB me already create ho chuka hai,
                      * kyunki transaction deposit API se pehle commit ho gayi.
@@ -964,8 +991,9 @@ class DealersController extends ApiController_1.ApiController {
         return __awaiter(this, void 0, void 0, function* () {
             const { username, page, search, type, status } = req.query;
             console.log(req.query, "req.query");
-            const pageNo = page ? page : '1';
-            const pageLimit = 999999;
+            // const pageNo = page ? (page as string) : '1'
+            const pageNo = page ? parseInt(page) : null;
+            const pageLimit = pageNo ? 20 : 999999;
             const currentUser = req.user;
             console.log(currentUser, "curen");
             const select = {
@@ -976,8 +1004,10 @@ class DealersController extends ApiController_1.ApiController {
                 pshare: 1,
                 mcom: 1,
                 matcom: 1,
+                cascom: 1,
                 matkalimit: 1,
                 scom: 1,
+                cacom: 1,
                 code: 1,
                 parentId: 1,
                 role: 1,
@@ -1066,68 +1096,156 @@ class DealersController extends ApiController_1.ApiController {
                 }
             ];
             let filters = [];
+            // if (username && search !== 'true') {
+            //   const user: IUserModel | null = await this.getUser(username)
+            //   if (!user) {
+            //     return res.status(404).json({ message: 'User not found' })
+            //   }
+            //   filters = paginationPipeLine(
+            //     pageNo,
+            //     [
+            //       {
+            //         $match: {
+            //           parentStr: { $elemMatch: { $eq: Types.ObjectId(user._id) } }
+            //         }
+            //       },
+            //       ...aggregateFilter,
+            //     ],
+            //     pageLimit,
+            //   )
+            // }else if (type) {
+            //   //if (username) const user: IUserModel | null = await this.getUser(username)
+            //   filters = paginationPipeLine(
+            //     pageNo || 1,
+            //     [
+            //       {
+            //         $match: {
+            //           role: type,
+            //           parentStr: { $elemMatch: { $eq: Types.ObjectId(currentUser._id) } },
+            //         },
+            //       },
+            //       ...aggregateFilter,
+            //     ],
+            //     pageLimit,
+            //   )
+            // } else if (username && search === 'true') {
+            //   filters = paginationPipeLine(
+            //     pageNo,
+            //     [
+            //       {
+            //         $match: {
+            //           username: new RegExp(username as string, 'i'),
+            //           parentStr: { $elemMatch: { $eq: Types.ObjectId(currentUser._id) } },
+            //         },
+            //       },
+            //       ...aggregateFilter,
+            //     ],
+            //     pageLimit,
+            //   )
+            // } else {
+            //   const { _id, role }: any = req?.user
+            //   if (status) {
+            //     filters = paginationPipeLine(
+            //       pageNo,
+            //       [
+            //         {
+            //           $match: {
+            //             parentId: Types.ObjectId(_id),
+            //             isLogin: status === 'true',
+            //           },
+            //         },
+            //         ...aggregateFilter,
+            //       ],
+            //       pageLimit,
+            //     )
+            //   } else {
+            //     if (role !== 'admin') {
+            //       filters = paginationPipeLine(
+            //         pageNo,
+            //         [{ $match: { parentId: Types.ObjectId(_id) } }, ...aggregateFilter],
+            //         pageLimit,
+            //       )
+            //     } else {
+            //       console.log(_id)
+            //       filters = paginationPipeLine(
+            //         pageNo,
+            //         [{ $match: { _id: Types.ObjectId(_id) } }, ...aggregateFilter],
+            //         pageLimit,
+            //       )
+            //     }
+            //   }
+            // }
+            const buildPipeline = (matchCondition) => {
+                const pipeline = [
+                    { $match: matchCondition },
+                    // ✅ YEH ADD KARO (IMPORTANT)
+                    { $sort: { isLogin: -1 } },
+                    ...aggregateFilter
+                ];
+                // ✅ Pagination ONLY when type exists
+                if (pageNo && type) {
+                    return (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, pipeline, pageLimit);
+                }
+                return pipeline;
+            };
+            // ✅ CASE 1
             if (username && search !== 'true') {
                 const user = yield this.getUser(username);
                 if (!user) {
                     return res.status(404).json({ message: 'User not found' });
                 }
-                filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [
-                    {
-                        $match: {
-                            parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(user._id) } }
-                        }
-                    },
-                    ...aggregateFilter,
-                ], pageLimit);
+                const matchCondition = {
+                    parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(user._id) } }
+                };
+                // 👇 YEH ADD KARO
+                if (type) {
+                    matchCondition.role = type;
+                }
+                filters = buildPipeline(matchCondition);
             }
-            else if (search === 'true' && type) {
-                //if (username) const user: IUserModel | null = await this.getUser(username)
-                filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [
-                    {
-                        $match: {
-                            role: type,
-                            parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(currentUser._id) } },
-                        },
-                    },
-                    ...aggregateFilter,
-                ], pageLimit);
+            // ✅ CASE 2 (TYPE FIXED)
+            else if (type) {
+                filters = buildPipeline({
+                    role: type,
+                    parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(currentUser._id) } }
+                    // parentId: Types.ObjectId(currentUser._id)
+                });
             }
+            // ✅ CASE 3
             else if (username && search === 'true') {
-                filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [
-                    {
-                        $match: {
-                            username: new RegExp(username, 'i'),
-                            parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(currentUser._id) } },
-                        },
-                    },
-                    ...aggregateFilter,
-                ], pageLimit);
+                filters = buildPipeline({
+                    username: new RegExp(username, 'i'),
+                    parentStr: { $elemMatch: { $eq: mongoose_2.Types.ObjectId(currentUser._id) } }
+                });
             }
             else {
                 const { _id, role } = req === null || req === void 0 ? void 0 : req.user;
                 if (status) {
-                    filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [
-                        {
-                            $match: {
-                                parentId: mongoose_2.Types.ObjectId(_id),
-                                isLogin: status === 'true',
-                            },
-                        },
-                        ...aggregateFilter,
-                    ], pageLimit);
+                    filters = buildPipeline({
+                        parentId: mongoose_2.Types.ObjectId(_id),
+                        isLogin: status === 'true'
+                    });
                 }
                 else {
                     if (role !== 'admin') {
-                        filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [{ $match: { parentId: mongoose_2.Types.ObjectId(_id) } }, ...aggregateFilter], pageLimit);
+                        filters = buildPipeline({
+                            parentId: mongoose_2.Types.ObjectId(_id),
+                            isLogin: status === 'false'
+                        });
                     }
                     else {
-                        console.log(_id);
-                        filters = (0, aggregation_pipeline_pagination_1.paginationPipeLine)(pageNo, [{ $match: { _id: mongoose_2.Types.ObjectId(_id) } }, ...aggregateFilter], pageLimit);
+                        filters = buildPipeline({
+                            _id: mongoose_2.Types.ObjectId(_id),
+                            isLogin: status === 'false'
+                        });
                     }
                 }
             }
             const users = yield User_1.User.aggregate(filters);
-            return this.success(res, Object.assign({}, users[0]));
+            if (pageNo && type) {
+                return this.success(res, Object.assign({}, users[0]));
+            }
+            return this.success(res, { items: users });
         });
     }
     getUserList2(req, res) {
@@ -1450,7 +1568,7 @@ class DealersController extends ApiController_1.ApiController {
             const { username } = req.query;
             const { role } = req === null || req === void 0 ? void 0 : req.user;
             let user;
-            if (username === 'superadmin' && role == 'admin') {
+            if (username === 'superadmin' && role == 'admin' || username === 'superadmin2' && role == 'admin') {
                 user = yield this.getUserDetailAndBalance(req);
             }
             else {

@@ -49,6 +49,7 @@ interface Iledger extends Document {
   commissionlega: number;
   commissiondega: number;
   Fancy: boolean;
+  casinostatus:boolean;
   betId: PopulatedDoc<IBet> | null;
   settled: boolean;
   updown:number;
@@ -73,6 +74,7 @@ const allledger = new Schema<Iledger>({
   narration: String,
   fammount:Number,
   Fancy: { type: Boolean, default: false },
+  casinostatus:{ type: Boolean, default: false },
   settled: { type: Boolean, default: false },
   updown:{type:Number,default:0},
   parentName:String,
