@@ -82,13 +82,22 @@ export const FancyList = React.memo(
     return (
       <div className="table-body">
         {/* <div>Hello world this debug side</div> */}
-        {fancies?.length > 0 &&
+         {fancies?.length > 0 &&
           fancies.map((fancy: LFancy) => {
             if (!fancy?.active) return null;
-            let updatedFancy: IFancy = {} as IFancy;
-            if (fancyUpdate[fancy.marketId]) {
-              updatedFancy = fancyUpdate[fancy.marketId];
-            }
+
+            const fancyName = String(fancy?.fancyName || "")
+  .toLowerCase()
+  .replace(/\s+/g, " ")
+  .trim();
+
+const shouldHide =
+  fancyName.includes("bhav") ||
+  /(?:^|\s)2(?:\s+adv)?$/.test(fancyName);
+
+if (shouldHide) {
+  return null;
+}
             //  console.log("hello world i am inside mmap function")
             // if (updatedFancy.LayPrice1 === undefined) return null
 

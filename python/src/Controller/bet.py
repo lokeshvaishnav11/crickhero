@@ -1853,7 +1853,7 @@ def checkAllOddsConditon(payload):
         if (errors):
             return {"message": "failed", "notification": f"{errors}"}
 
-def checkMaxlimit(payload,userInfo):
+def checkMaxlimit(payload,userInfo,matchInfo):
     try:
         market_id = payload['marketId']
         user_id = userInfo['_id']
@@ -1868,10 +1868,10 @@ def checkMaxlimit(payload,userInfo):
 
         if payload['betOn'] == "CASINO" and total_stack+payload['stack'] > 50000:
             return {"message": "failed", "notification": "Max Limit completed !"}
-        # elif payload['betOn'] == "MATCH_ODDS" and total_stack + payload['stack'] > 500000:
-        #     return {"message": "failed", "notification": "Max Limit completed !"}
-        # elif payload['betOn'] == "FANCY" and total_stack + payload['stack'] > 200000:
-        #     return {"message": "failed", "notification": "Max Limit completed !"}
+        elif payload['betOn'] == "MATCH_ODDS" and total_stack + payload['stack'] >  float(matchInfo.get("inPlayBookMaxLimit", 0) or 0):
+            return {"message": "failed", "notification": "Max Limit completed !"}
+        elif payload['betOn'] == "FANCY" and total_stack + payload['stack'] > float(matchInfo.get("fancyTotalLimit", 0) or 0):
+            return {"message": "failed", "notification": "Max Limit completed !"}
 
         # Agar limit cross nahi hui to success
         # return {"message": "success", "notification": "Bet allowed", "totalStack": total_stack}
@@ -2143,7 +2143,7 @@ def placebet(betObj, userInfo):
                 return json.dumps(error({}, notification), cls=JSONEncoderWithObjectId)
             #print("validateOddsnew")
             # matchName = matchInfo.get("title", "") if payload['betOn'] == "CASINO" else matchInfo.get("name", "")
-            checkLimit = checkMaxlimit(payload,userInfo)
+            checkLimit = checkMaxlimit(payload,userInfo,matchInfo)
             if(checkLimit is not None and 'message' in checkLimit):
                 notification = checkLimit['notification']
                 return json.dumps(error({},notification),cls= JSONEncoderWithObjectId)
