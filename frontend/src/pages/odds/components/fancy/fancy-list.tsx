@@ -98,6 +98,10 @@ const shouldHide =
 if (shouldHide) {
   return null;
 }
+  let updatedFancy: IFancy = {} as IFancy;
+            if (fancyUpdate[fancy.marketId]) {
+              updatedFancy = fancyUpdate[fancy.marketId];
+            }
             //  console.log("hello world i am inside mmap function")
             // if (updatedFancy.LayPrice1 === undefined) return null
 
