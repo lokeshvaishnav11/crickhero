@@ -2799,6 +2799,7 @@ const { userIds }: any = req.body;
  TOTAL_SUPER_ADMIN_ID :any = "6ac4bd548a6582f880d3b100";
 
 
+
 declaremarketresult = async (
   req: Request,
   res: Response
@@ -2806,13 +2807,88 @@ declaremarketresult = async (
   try {
     const { selectionId, matchId, marketId }: any = req.query;
 
+    const matchIdNumber = Number(matchId);
+    const winningSelectionId = String(selectionId);
+    const marketIdString = String(marketId);
+
+    if (
+      !Number.isInteger(matchIdNumber) ||
+      !marketIdString ||
+      !winningSelectionId ||
+      winningSelectionId === "undefined"
+    ) {
+      return this.fail(res, "Invalid matchId, marketId or selectionId");
+    }
+
+    // ======================================================
+    // MARKET SE WINNING TEAM FIND KARO
+    // ======================================================
+
+    const resultMarket: any = await Market.findOne({
+      matchId: matchIdNumber,
+      marketId: marketIdString,
+    });
+
+    if (!resultMarket) {
+      return this.fail(res, "Market not found");
+    }
+
+    let winningTeamName = "";
+
+    if (winningSelectionId === "-1") {
+      winningTeamName = "Abandoned";
+    } else {
+      const winningRunner = (resultMarket.runners || []).find(
+        (runner: any) =>
+          String(runner.selectionId) === winningSelectionId
+      );
+
+      if (!winningRunner) {
+        return this.fail(
+          res,
+          "Winning selectionId not found in market"
+        );
+      }
+
+      winningTeamName = String(
+        winningRunner.runnerName ||
+        winningRunner.selectionName ||
+        winningRunner.name ||
+        ""
+      ).trim();
+
+      if (!winningTeamName) {
+        return this.fail(res, "Winning team name not found");
+      }
+    }
+
+    // ======================================================
+    // MATCH VALIDATION
+    // ======================================================
+
+    const matchInfo: any = await Match.findOne({
+      matchId: matchIdNumber,
+    });
+
+    if (!matchInfo) {
+      return this.fail(res, "Match not found");
+    }
+
+    if (resultMarket.resultDelcare === "yes") {
+      return this.fail(res, "Market result already declared");
+    }
+
+    // ======================================================
+    // GET PENDING BETS
+    // ======================================================
+
     const userbet: any = await Bet.aggregate([
       {
         $match: {
           status: "pending",
           bet_on: BetOn.MATCH_ODDS,
-          matchId: parseInt(matchId),
-          marketId: marketId,
+          matchId: matchIdNumber,
+          marketId: marketIdString,
         },
       },
       {
@@ -2823,193 +2899,126 @@ declaremarketresult = async (
       },
     ]);
 
-    let userIdList: any = [];
-    const parentIdList: any = [];
+    const userIdList: any[] = [];
+    const parentIdList: any[] = [];
+
+    // ======================================================
+    // SETTLEMENT
+    // ======================================================
 
     const declare_result = userbet.map(async (Item: any) => {
-
-      const allbets: any = Item.allBets;
-
-      // ======================================================
-      // CHECK USER TREE
-      // ======================================================
-
+      const allbets: any[] = Item.allBets;
       const firstBet = allbets?.[0];
 
       const hierarchyIds = [
         ...(firstBet?.parentStr || []).map(
           (id: any) => id.toString()
         ),
-
         ...(firstBet?.ratioStr?.allRatio || []).map(
           (item: any) => item.parent?.toString()
         ),
       ];
 
-      const isPerBetUser =
-        hierarchyIds.includes(this.PER_BET_SUPER_ADMIN_ID);
+      const isPerBetUser = hierarchyIds.includes(
+        this.PER_BET_SUPER_ADMIN_ID
+      );
 
-      const isTotalUser =
-        hierarchyIds.includes(this.TOTAL_SUPER_ADMIN_ID);
-
-
-      // ======================================================
-      // TOTAL MODE KE LIYE CURRENT MARKET P/L
-      // ======================================================
+      const isTotalUser = hierarchyIds.includes(
+        this.TOTAL_SUPER_ADMIN_ID
+      );
 
       let totalProfitLoss = 0;
-
       let totalNarration = "";
-
       let totalBetId: any = null;
 
+      // ====================================================
+      // SETTLE EACH BET
+      // ====================================================
 
       const settle_single = allbets.map(
         async (ItemBetList: any, indexBetList: number) => {
-
           let profit_type: string = "loss";
 
+          const isWinningSelection =
+            winningSelectionId ===
+            String(ItemBetList.selectionId);
 
-          // ==================================================
-          // PROFIT / LOSS TYPE
-          // ==================================================
-
-          if (
-            parseInt(selectionId) ==
-            ItemBetList.selectionId
-          ) {
-
-            profit_type =
-              ItemBetList.isBack == true
-                ? "profit"
-                : profit_type;
-
+          if (isWinningSelection) {
+            profit_type = ItemBetList.isBack
+              ? "profit"
+              : "loss";
           } else {
-
-            profit_type =
-              ItemBetList.isBack == true
-                ? profit_type
-                : "profit";
+            profit_type = ItemBetList.isBack
+              ? "loss"
+              : "profit";
           }
 
+          // ================================================
+          // PROFIT LOSS CALCULATION
+          // ================================================
 
-          // ==================================================
-          // PROFIT / LOSS AMOUNT
-          // ==================================================
-
-          let profitLossAmt: number = 0;
+          let profitLossAmt = 0;
 
           if (ItemBetList.isBack) {
-
-            if (profit_type == "profit") {
-
+            if (profit_type === "profit") {
               profitLossAmt =
-                (
-                  parseFloat(
-                    ItemBetList.odds.toString()
-                  ) - 1
-                ) *
-                parseFloat(
-                  ItemBetList.stack.toString()
-                );
-
-            } else if (
-              profit_type == "loss"
-            ) {
-
-              profitLossAmt =
-                parseFloat(
-                  ItemBetList.loss.toString()
-                );
+                (Number(ItemBetList.odds) - 1) *
+                Number(ItemBetList.stack);
+            } else {
+              profitLossAmt = Number(ItemBetList.loss);
             }
-
           } else {
-
-            if (profit_type == "profit") {
-
-              profitLossAmt =
-                ItemBetList.stack;
-
-            } else if (
-              profit_type == "loss"
-            ) {
-
-              profitLossAmt =
-                parseFloat(
-                  ItemBetList.loss.toString()
-                );
+            if (profit_type === "profit") {
+              profitLossAmt = Number(ItemBetList.stack);
+            } else {
+              profitLossAmt = Number(ItemBetList.loss);
             }
           }
 
-
-          // ==================================================
           // ABANDONED
-          // ==================================================
-
-          if (selectionId == -1) {
+          if (winningSelectionId === "-1") {
             profitLossAmt = 0;
           }
 
-
-          // ==================================================
+          // ================================================
           // NARRATION
-          // ==================================================
+          // ================================================
 
-          let type_string: string =
-            ItemBetList.isBack
-              ? "Back"
-              : "Lay";
+          const type_string = ItemBetList.isBack
+            ? "Back"
+            : "Lay";
 
-          let narration: string =
+          const narration =
             ItemBetList.matchName +
             " / " +
             ItemBetList.selectionName +
             " / " +
             type_string +
             " / " +
-            (
-              selectionId == -1
-                ? "Abandoned"
-                : selectionId
-            );
+            (winningSelectionId === "-1"
+              ? "Abandoned"
+              : winningSelectionId);
 
-
-          // ==================================================
-          // NORMAL USER P/L
-          // ==================================================
+          // ================================================
+          // NORMAL USER PROFIT LOSS
+          // ================================================
 
           await this.addprofitlosstouser({
             userId: ObjectId(Item._id),
-
-            bet_id:
-              ObjectId(ItemBetList._id),
-
-            profit_loss:
-              profitLossAmt,
-
+            bet_id: ObjectId(ItemBetList._id),
+            profit_loss: profitLossAmt,
             matchId,
-
             narration,
-
-            sportsType:
-              ItemBetList.sportId,
-
-            selectionId:
-              ItemBetList.selectionId,
-
-            sportId:
-              ItemBetList.sportId,
+            sportsType: ItemBetList.sportId,
+            selectionId: ItemBetList.selectionId,
+            sportId: ItemBetList.sportId,
           });
 
-
-          // ==================================================
+          // ================================================
           // PER BET SUPERADMIN
-          //
-          // HAR BET PAR cal9xbro()
-          // ==================================================
+          // ================================================
 
           if (isPerBetUser) {
-
             await this.cal9xbro(
               Item._id,
               profitLossAmt,
@@ -3018,215 +3027,170 @@ declaremarketresult = async (
               ItemBetList._id,
               BetOn.MATCH_ODDS
             );
-
           }
 
-
-          // ==================================================
+          // ================================================
           // TOTAL SUPERADMIN
-          //
-          // ABHI cal9xbro NAHI CHALEGA.
-          // SIRF P/L ADD KARO.
-          // ==================================================
+          // ================================================
 
           if (isTotalUser) {
-
-            totalProfitLoss +=
-              Number(profitLossAmt);
+            totalProfitLoss += Number(profitLossAmt);
 
             if (!totalBetId) {
-              totalBetId =
-                ItemBetList._id;
+              totalBetId = ItemBetList._id;
             }
 
             if (!totalNarration) {
-
               totalNarration =
                 ItemBetList.matchName +
                 " / " +
                 ItemBetList.marketName;
-
             }
-
           }
 
+          // ================================================
+          // PARENT IDS
+          // ================================================
 
-          // ==================================================
-          // PARENT IDs
-          // ==================================================
-
-          if (indexBetList == 0) {
-
-            ItemBetList.ratioStr.allRatio.map(
+          if (indexBetList === 0) {
+            (ItemBetList.ratioStr?.allRatio || []).forEach(
               (ItemParentStr: any) => {
-
-                parentIdList.push(
-                  ItemParentStr.parent
-                );
+                parentIdList.push(ItemParentStr.parent);
 
                 userIdList.push(
-                  ObjectId(
-                    ItemParentStr.parent
-                  )
+                  ObjectId(ItemParentStr.parent)
                 );
-
               }
             );
-
           }
-
         }
       );
 
-
       await Promise.all(settle_single);
 
+      // ====================================================
+      // TOTAL SUPERADMIN - ONLY ONCE
+      // ====================================================
 
-      // ======================================================
-      // TOTAL SUPERADMIN
-      //
-      // ALL BETS COMPLETE HONE KE BAAD SIRF EK BAAR
-      // ======================================================
-
-      if (
-        isTotalUser &&
-        totalBetId
-      ) {
-
+      if (isTotalUser && totalBetId) {
         await this.cal9xbro(
           Item._id,
           totalProfitLoss,
           totalNarration,
           matchId,
           totalBetId,
-          BetOn.MATCH_ODDS,
+          BetOn.MATCH_ODDS
         );
-
       }
 
-
-      userIdList.push(
-        ObjectId(Item._id)
-      );
-
+      userIdList.push(ObjectId(Item._id));
     });
-
 
     await Promise.all(declare_result);
 
-
-    // ========================================================
+    // ======================================================
     // COMPLETE BETS
-    // ========================================================
+    // ======================================================
 
     await Bet.updateMany(
       {
-        userId: {
-          $in: userIdList
-        },
-
-        matchId: matchId,
-
-        bet_on:
-          BetOn.MATCH_ODDS,
-
-        marketId: marketId,
+        userId: { $in: userIdList },
+        matchId: matchIdNumber,
+        bet_on: BetOn.MATCH_ODDS,
+        marketId: marketIdString,
+        status: "pending",
       },
-
       {
         $set: {
-          status: "completed"
-        }
+          status: "completed",
+        },
       }
     );
 
-
-    // ========================================================
+    // ======================================================
     // UNIQUE USERS
-    // ========================================================
+    // ======================================================
 
     const unique = [
       ...new Set(
-        userIdList.map(
-          (id: any) =>
-            id.toString()
-        )
-      )
-    ].map(
-      (id: any) =>
-        ObjectId(id)
-    );
+        userIdList.map((id: any) => id.toString())
+      ),
+    ].map((id: any) => ObjectId(id));
 
-
-    // ========================================================
+    // ======================================================
     // ACCOUNT STATEMENT
-    // ========================================================
+    // ======================================================
 
     if (unique.length > 0) {
-
       await this.updateUserAccountStatement(
         unique,
         parentIdList
       );
-
     }
 
-
-    // ========================================================
-    // MATCH RESULT
-    // ========================================================
+    // ======================================================
+    // MATCH RESULT UPDATE
+    // ======================================================
 
     await Match.updateOne(
       {
-        matchId:
-          parseInt(matchId)
+        matchId: matchIdNumber,
       },
-
       {
         $set: {
           result_delare: true,
-          result: selectionId
-        }
+          result: selectionId,
+          resultstring: winningTeamName,
+          inPlay: false,
+          active: false,
+          updatedAt: new Date(),
+        },
       }
     );
 
-
-    // ========================================================
-    // MARKET RESULT
-    // ========================================================
+    // ======================================================
+    // MARKET RESULT UPDATE
+    // ======================================================
 
     await Market.updateOne(
       {
-        marketId: marketId,
-
-        matchId:
-          parseInt(matchId)
+        marketId: marketIdString,
+        matchId: matchIdNumber,
       },
-
       {
         $set: {
           resultDelcare: "yes",
-          result: selectionId
-        }
+          result: selectionId,
+          updatedAt: new Date(),
+        },
       }
     );
 
+    // ======================================================
+    // SUCCESS RESPONSE
+    // ======================================================
 
     return this.success(
       res,
-      userbet,
-      ""
+      {
+        matchId: matchIdNumber,
+        marketId: marketIdString,
+        selectionId: winningSelectionId,
+        winningTeam: winningTeamName,
+        resultstring: winningTeamName,
+        inPlay: false,
+        active: false,
+        settledUsers: userbet.length,
+      },
+      "Market Result Declared Successfully"
     );
 
   } catch (e: any) {
-
-    return this.fail(
-      res,
-      e
-    );
-
+    console.error("declaremarketresult error:", e);
+    return this.fail(res, e);
   }
 };
+
 
 
 
