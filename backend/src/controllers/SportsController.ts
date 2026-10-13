@@ -129,7 +129,7 @@ class SportsController extends ApiController {
           isBookMaker,
           isT10: isT10 || isT10Fancy,
           resultstring: "",
-           fancyTotalLimit:250000,
+           fancyTotalLimit:300000,
           betDelay:1000
         }
 

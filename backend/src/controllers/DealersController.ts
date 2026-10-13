@@ -659,7 +659,7 @@ async deleteUser(req: Request, res: Response): Promise<Response> {
         exposerLimit !== null &&
         exposerLimit !== ""
           ? Number(exposerLimit)
-          : 100000;
+          : 10000000000000000;
 
       /* ================= VALIDATION ================= */
 
