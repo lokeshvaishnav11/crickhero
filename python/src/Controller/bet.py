@@ -213,166 +213,110 @@ def check_bookmaker_profit_limit(userInfo, matchInfo, current_bet):
             "notification": message
         }
 
-    def to_decimal(value, field_name):
+    def decimal_amount(value):
         try:
-            result = Decimal(str(value))
-        except (InvalidOperation, TypeError, ValueError):
-            raise ValueError(f"Invalid {field_name}")
+            amount = Decimal(str(value))
+            if not amount.is_finite() or amount <= 0:
+                raise ValueError()
+            return amount
+        except (InvalidOperation, ValueError, TypeError):
+            raise ValueError("Invalid bet amount")
 
-        if not result.is_finite():
-            raise ValueError(f"Invalid {field_name}")
-
-        return result
-
-    def get_is_back(value):
+    def is_back(value):
         if value is True or value == 1 or value == "1":
             return True
-
         if value is False or value == 0 or value == "0":
             return False
-
         if isinstance(value, str):
             if value.lower() == "true":
                 return True
             if value.lower() == "false":
                 return False
-
-        raise ValueError("Invalid isBack value")
+        raise ValueError("Invalid isBack")
 
     try:
-        # ==========================================
-        # 1. BOOKMAKER MAX LIMIT
-        # ==========================================
+        limit = Decimal(str(
+            matchInfo.get("inPlayBookMaxLimit", 0) or 0
+        ))
 
-        limit = to_decimal(
-            matchInfo.get("inPlayBookMaxLimit", 0) or 0,
-            "Bookmaker limit"
-        )
-
-        if limit <= 0:
-            return failed(
-                "Bookmaker maximum limit not configured"
-            )
-
-        # ==========================================
-        # 2. CURRENT BET DETAILS
-        # ==========================================
+        if not limit.is_finite() or limit <= 0:
+            return failed("Bookmaker limit not configured")
 
         user_id = ObjectId(userInfo["_id"])
         match_id = int(current_bet["matchId"])
         market_id = str(current_bet["marketId"])
-        selection_id = str(current_bet["selectionId"])
 
-        current_amount = to_decimal(
-            current_bet["stack"],
-            "bet amount"
-        )
+        # Get market runners
+        market = Market.find_one({
+            "matchId": match_id,
+            "marketId": market_id
+        })
 
-        if current_amount <= 0:
-            return failed("Bet amount must be greater than zero")
+        if not market:
+            return failed("Bookmaker market not found")
 
-        current_is_back = get_is_back(
-            current_bet["isBack"]
-        )
+        runners = market.get("runners", [])
+        runner_ids = [
+            str(r["selectionId"])
+            for r in runners
+        ]
 
-        # ==========================================
-        # 3. OLD PENDING BETS
-        # SAME USER + MATCH + MARKET + SELECTION
-        # ==========================================
+        # This stake-netting rule supports 2 outcomes only
+        if len(runner_ids) != 2 or len(set(runner_ids)) != 2:
+            return failed(
+                "This Bookmaker limit requires exactly 2 runners"
+            )
 
+        # All pending bets for this market
         old_bets = list(Bet.find({
             "userId": user_id,
             "matchId": match_id,
             "marketId": market_id,
-            "selectionId": int(selection_id),
             "marketName": "Bookmaker",
             "status": "pending"
         }))
 
-        # ==========================================
-        # 4. OLD LAGAI AND KHAI TOTAL
-        # ==========================================
+        all_bets = old_bets + [current_bet]
 
-        old_lagai = Decimal("0")
-        old_khai = Decimal("0")
+        # Net stake-based position for each outcome
+        positions = {
+            runner_ids[0]: Decimal("0"),
+            runner_ids[1]: Decimal("0")
+        }
 
-        for bet in old_bets:
+        for bet in all_bets:
+            sid = str(bet["selectionId"])
 
-            bet_amount = to_decimal(
-                bet["stack"],
-                "existing bet amount"
-            )
+            if sid not in positions:
+                return failed("Invalid bookmaker selectionId")
 
-            if bet_amount <= 0:
-                return failed("Invalid existing bet amount")
+            stake = decimal_amount(bet["stack"])
+            back = is_back(bet["isBack"])
 
-            if get_is_back(bet["isBack"]):
-                # True = LAGAI
-                old_lagai += bet_amount
-            else:
-                # False = KHAI
-                old_khai += bet_amount
+            for outcome_id in runner_ids:
+                same_team_wins = (sid == outcome_id)
 
-        # ==========================================
-        # 5. OLD NET POSITION
-        # POSITIVE = LAGAI
-        # NEGATIVE = KHAI
-        # ==========================================
+                # LAGAI = positive if selected team wins
+                # KHAI = negative if selected team wins
+                if back:
+                    positions[outcome_id] += (
+                        stake if same_team_wins else -stake
+                    )
+                else:
+                    positions[outcome_id] += (
+                        -stake if same_team_wins else stake
+                    )
 
-        old_net = old_lagai - old_khai
+        maximum_net_amount = max(
+            abs(value) for value in positions.values()
+        )
 
-        # ==========================================
-        # 6. LIMIT FULL - OPPOSITE SIDE ONLY
-        # ==========================================
-
-        if old_net >= limit and current_is_back:
+        if maximum_net_amount > limit:
             return failed(
-                f"LAGAI limit ₹{limit} full. "
-                "Only KHAI allowed."
+                f"Bookmaker Overall Net Amount Limit "
+                f"₹{limit} Exceeded. "
+                f"Current net amount ₹{maximum_net_amount}."
             )
-
-        if old_net <= -limit and not current_is_back:
-            return failed(
-                f"KHAI limit ₹{limit} full. "
-                "Only LAGAI allowed."
-            )
-
-        # ==========================================
-        # 7. NEW NET POSITION
-        # ==========================================
-
-        if current_is_back:
-            new_net = old_net + current_amount
-        else:
-            new_net = old_net - current_amount
-
-        # ==========================================
-        # 8. FINAL LIMIT CHECK
-        # ==========================================
-
-        if abs(new_net) > limit:
-
-            if current_is_back:
-                available = limit - old_net
-                side = "LAGAI"
-            else:
-                available = limit + old_net
-                side = "KHAI"
-
-            available = max(
-                Decimal("0"),
-                available
-            )
-
-            return failed(
-                f"Bookmaker {side} limit exceeded. "
-                f"Maximum allowed amount ₹{available}. "
-                f"Limit ₹{limit}."
-            )
-
-        # ==========================================
-        # 9. BET ALLOWED
-        # ==========================================
 
         return None
 
