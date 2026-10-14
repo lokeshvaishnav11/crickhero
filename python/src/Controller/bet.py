@@ -117,8 +117,8 @@ def validate_bet(payload, userInfo, balance, settings, matchInfo):
     if (betLock and 'fancy' in betLock and 'fancy' in betLock and betLock['fancy'] and payload['marketName'] == 'Fancy') or (betLockUser and 'fancy' in betLockUser and betLockUser['fancy'] and payload['marketName'] == 'Fancy'):
         return {"message": 'failed', "notification": f"Bet is not acceptable.Please contact upline"}
     print(settings)
-    if (settings and int(settings['minBet']) > payload['stack'] or settings and int(settings['maxBet']) < payload['stack']):
-        return {"message": 'failed', "notification": f"Check Maximum or Minimum Bet Limit"}
+    # if (settings and int(settings['minBet']) > payload['stack'] or settings and int(settings['maxBet']) < payload['stack']):
+    #     return {"message": 'failed', "notification": f"Check Maximum or Minimum Bet Limit"}
 
     # inplay condition for check max min limmit
     if payload['betOn'] != "CASINO":
